@@ -59,7 +59,7 @@ Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better
    npm run cf:deploy
    ```
 
-Para Cloudflare Workers Builds usa `npm run cf:build` como comando de build y `npx wrangler deploy` como comando de deploy. `wrangler.jsonc` apunta al Worker generado en `.open-next/worker.js`.
+Para Cloudflare Workers Builds usa `npm run cf:build` como comando de build y `npx wrangler deploy` como comando de deploy. `wrangler.jsonc` también ejecuta el build automáticamente antes de desplegar, por lo que el Worker generado en `.open-next/worker.js` no necesita versionarse.
 
 ## API
 
