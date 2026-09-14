@@ -1,10 +1,13 @@
 node_modules/
 .next/
+.open-next/
+.wrangler/
 out/
 build/
 .DS_Store
 *.log
 .env*
 !.env.example
+.dev.vars*
 tsconfig.tsbuildinfo
 generated/

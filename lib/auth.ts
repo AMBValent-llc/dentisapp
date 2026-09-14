@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth";
+import { betterAuth } from "better-auth/minimal";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 

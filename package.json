@@ -8,6 +8,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "db:dev": "prisma dev --detach --name docli",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -27,6 +32,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.6",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.15.30",
     "@types/pg": "^8.23.1",
@@ -37,6 +43,12 @@
     "prisma": "^7.10.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.13",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wrangler": "^4.131.2"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.2",
+    "mysql2": "3.24.4",
+    "postcss": "8.5.28"
   }
 }

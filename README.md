@@ -32,10 +32,34 @@ En producción usa PostgreSQL administrado, una base shadow separada para migrac
 
 - Correo: `admin@docli.local`
 - Contraseña: `DocliDemo2026!`
-- Nombre: Andrea Torres
+- Nombre: Andrés Torres
 - Organización: Equipo Central
 
 El seed es idempotente, crea la contraseña mediante Better Auth (queda hasheada), y carga procesos, pasos, tareas, referencias documentales, pacientes, historias, consentimientos, remisiones y exámenes.
+
+## Despliegue en Cloudflare Workers
+
+Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better Auth y PostgreSQL. No debe desplegarse como sitio estático de Cloudflare Pages.
+
+1. Configura en Cloudflare una URL PostgreSQL con pool de conexiones y las variables de producción:
+   - `DATABASE_URL` como secreto del Worker.
+   - `BETTER_AUTH_SECRET` como secreto de al menos 32 caracteres aleatorios.
+   - `BETTER_AUTH_URL` con el origen HTTPS final.
+   - `NEXT_PUBLIC_APP_URL` con el mismo origen HTTPS, disponible durante el build.
+2. Ejecuta las migraciones desde un entorno confiable antes de publicar:
+   ```bash
+   DATABASE_URL="..." npm exec -- prisma migrate deploy
+   ```
+3. Verifica localmente el artefacto en el runtime de Workers:
+   ```bash
+   npm run cf:preview
+   ```
+4. Despliega:
+   ```bash
+   npm run cf:deploy
+   ```
+
+Para Cloudflare Workers Builds usa `npm run cf:build` como comando de build y `npx wrangler deploy` como comando de deploy. `wrangler.jsonc` apunta al Worker generado en `.open-next/worker.js`.
 
 ## API
 
