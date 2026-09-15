@@ -11,3 +11,4 @@ build/
 .dev.vars*
 tsconfig.tsbuildinfo
 generated/
+.neon
