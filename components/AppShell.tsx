@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
@@ -95,7 +96,10 @@ export function AppShell({ children, userName, organizationName, role }: { child
     <header className="sticky top-0 z-40 h-14.5 border-b border-line bg-white/90 backdrop-blur-xl">
       <nav className="flex h-full items-center justify-between gap-4 px-4 max-sm:gap-2 max-sm:px-2.5" aria-label="Barra principal">
         <button ref={toggleRef} className="hidden size-9.5 rounded-xl border border-line bg-white max-[880px]:block" type="button" aria-controls="app-sidebar" aria-expanded={sidebar} aria-label={sidebar ? "Cerrar navegación" : "Abrir navegación"} onClick={() => setSidebar((value) => !value)}>☰</button>
-        <Link className="inline-flex items-center gap-2 text-lg font-black no-underline before:grid before:size-7.5 before:place-items-center before:rounded-lg before:bg-primary before:text-xs before:text-white before:content-['D'] max-[880px]:text-[0]" href="/dashboard">Docli</Link>
+        <Link className="inline-flex min-h-11 items-center gap-2 text-lg font-black no-underline max-[880px]:text-[0]" href="/dashboard" aria-label="Docli, dashboard">
+          <Image className="size-8 shrink-0 object-contain" src="/docli-isotipo.png" width={32} height={32} alt="" />
+          Docli
+        </Link>
         <form className="flex h-9.5 w-[min(440px,45vw)] rounded-xl bg-[#f2f6f6] p-0.5 max-[880px]:flex-1 max-[880px]:w-auto" role="search" onSubmit={search}>
           <label className="sr-only" htmlFor="global-search">Buscar procesos o tareas</label>
           <input className="min-w-0 flex-1 bg-transparent px-3 outline-none" id="global-search" name="query" type="search" placeholder="Buscar procesos, tareas…" />
