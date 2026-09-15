@@ -11,15 +11,16 @@ const previewRows = [
 export default function LandingPage() {
   return <PublicShell landing>
     <main className="overflow-clip" id="main-content">
-      <section className="mx-auto grid min-h-170 w-full max-w-330 grid-cols-[minmax(0,.86fr)_minmax(500px,1.14fr)] items-center gap-[clamp(2.5rem,7vw,7rem)] px-[clamp(1.25rem,4vw,3.5rem)] py-[clamp(4rem,8vw,7rem)] max-[880px]:grid-cols-1 max-sm:min-h-0 max-sm:pt-14">
-        <Reveal>
-          <span className="mb-5 inline-block rounded-full border border-[#c9e6e4] bg-white px-3 py-1.5 text-xs font-extrabold uppercase tracking-[.07em] text-primary-dark">● Procesos visibles de principio a fin</span>
-          <h1 className="mb-5 text-[clamp(3.4rem,7vw,6.5rem)] font-bold leading-[.92] tracking-[-.07em] max-sm:text-[clamp(3.2rem,16vw,5rem)]">El trabajo fluye<br /><em className="not-italic text-primary">cuando es claro.</em></h1>
-          <p className="max-w-142.5 text-lg text-muted">Diseña cómo debe hacerse el trabajo, asigna responsables y sigue cada avance sin perseguir mensajes. Docli reúne procesos, tareas, documentos y resultados en una sola vista.</p>
-          <div className="my-7 flex flex-wrap gap-3"><ButtonLink href="/login">Organizar mi equipo →</ButtonLink><ButtonLink href="/planes" secondary>Ver planes</ButtonLink></div>
-          <div className="flex flex-wrap gap-4 text-xs text-muted"><span>✓ Puesta en marcha rápida</span><span>✓ Roles y trazabilidad</span><span>✓ Módulos especializados</span></div>
-        </Reveal>
-        <Reveal className="relative rounded-[22px] border border-[#d7e5e5] bg-white shadow-[0_35px_90px_rgb(23_49_58/0.16)] [transform:perspective(1200px)_rotateY(-3deg)] max-[880px]:mx-auto max-[880px]:w-full max-[880px]:max-w-175 max-[880px]:transform-none" delay={140}>
+      <section className="bg-linear-to-r from-[#075e68] via-[#08717d] to-primary">
+        <div className="mx-auto grid min-h-170 w-full max-w-330 grid-cols-[minmax(0,.86fr)_minmax(500px,1.14fr)] items-center gap-[clamp(2.5rem,7vw,7rem)] px-[clamp(1.25rem,4vw,3.5rem)] py-[clamp(4rem,8vw,7rem)] max-[880px]:grid-cols-1 max-sm:min-h-0 max-sm:pt-14">
+          <Reveal className="text-white">
+            <span className="mb-5 inline-block rounded-full border border-white/25 bg-white/12 px-3 py-1.5 text-xs font-extrabold uppercase tracking-[.07em] text-white">● Procesos visibles de principio a fin</span>
+            <h1 className="mb-5 text-[clamp(3.4rem,7vw,6.5rem)] font-bold leading-[.92] tracking-[-.07em] max-sm:text-[clamp(3.2rem,16vw,5rem)]">El trabajo fluye<br /><em className="not-italic text-[#9be5df]">cuando es claro.</em></h1>
+            <p className="max-w-142.5 text-lg text-white/75">Diseña cómo debe hacerse el trabajo, asigna responsables y sigue cada avance sin perseguir mensajes. Docli reúne procesos, tareas, documentos y resultados en una sola vista.</p>
+            <div className="my-7 flex flex-wrap gap-3"><ButtonLink href="/login" variant="light">Organizar mi equipo →</ButtonLink><ButtonLink className="border-white/40 bg-white/10 text-white hover:border-white hover:bg-white/18 hover:text-white" href="/planes" secondary>Ver planes</ButtonLink></div>
+            <div className="flex flex-wrap gap-4 text-xs text-white/75"><span>✓ Puesta en marcha rápida</span><span>✓ Roles y trazabilidad</span><span>✓ Módulos especializados</span></div>
+          </Reveal>
+          <Reveal className="relative rounded-[22px] border border-white/35 bg-white shadow-[0_35px_90px_rgb(3_48_89/0.3)] [transform:perspective(1200px)_rotateY(-3deg)] max-[880px]:mx-auto max-[880px]:w-full max-[880px]:max-w-175 max-[880px]:transform-none" delay={140}>
           <header className="flex h-12 items-center gap-4 border-b border-[#e7eeee] px-3 text-[.65rem]"><b className="flex items-center gap-1.5"><i className="grid size-6 place-items-center rounded-lg bg-primary not-italic text-white">D</i> Docli</b><span className="ml-auto flex-1 rounded-lg bg-[#f3f7f7] px-2 py-1 text-[#9aabad]">Buscar procesos, tareas…</span><i className="grid size-6 place-items-center rounded-lg bg-primary not-italic text-white">AT</i></header>
           <div className="grid min-h-97.5 grid-cols-[115px_1fr] max-sm:grid-cols-[75px_1fr]">
             <aside className="grid content-start gap-1 rounded-bl-[21px] bg-[#153740] p-3 text-[.52rem] text-[#a9bec1] [&>*]:rounded-lg [&>*]:p-2"><b className="bg-primary text-white">▦ Dashboard</b><span>◎ Procesos</span><span>✓ Tareas</span><span>▤ Documentos</span><span>↗ Reportes</span></aside>
@@ -30,7 +31,8 @@ export default function LandingPage() {
             </section>
           </div>
           <div className="animate-float absolute -bottom-6 -right-6 flex items-center gap-2 rounded-xl border border-line bg-white px-3.5 py-3 text-[.65rem] shadow-card max-sm:right-2"><span className="grid size-7 place-items-center rounded-lg bg-[#e4f7ed] text-success">✓</span><b className="grid">Paso aprobado<small className="font-normal text-muted">El equipo recibió el cambio</small></b></div>
-        </Reveal>
+          </Reveal>
+        </div>
       </section>
       <Reveal as="section" className="bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-[clamp(4rem,8vw,7rem)]">
         <div className="mx-auto mb-10 max-w-180 text-center"><span className="text-xs font-extrabold uppercase tracking-[.1em] text-primary">Una forma común de trabajar</span><h2 className="my-2 text-[clamp(2.2rem,4vw,3.4rem)] font-bold" id="features-title">Del acuerdo a la ejecución, sin vacíos</h2><p className="text-muted">Cada persona sabe qué sigue, qué necesita y cómo se mide el resultado.</p></div>

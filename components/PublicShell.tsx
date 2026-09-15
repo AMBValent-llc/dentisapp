@@ -64,7 +64,7 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
           <Link className="rounded-xl bg-primary px-3.5 py-2.5 font-semibold text-white no-underline" href="/login">Iniciar sesión</Link>
         </div>
       </header>
-      <div className="h-19 shrink-0" aria-hidden="true" />
+      <div className={cn("h-19 shrink-0", landing && "bg-linear-to-r from-[#075e68] via-[#08717d] to-primary")} aria-hidden="true" />
       {children}
       <footer className={cn("mt-auto text-center text-sm", landing ? "grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t border-line bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-6 max-sm:grid-cols-[1fr_auto] max-[480px]:grid-cols-1 max-[480px]:gap-3" : "bg-[#112b33] p-5 text-[#cbd8db]")}>
         {landing ? <>
