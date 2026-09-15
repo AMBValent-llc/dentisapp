@@ -75,7 +75,7 @@ export async function verifyStaging(env: Environment, fetcher = fetch) {
   await verifyAccess(env, fetcher);
   const staging = origin(env.STAGING_URL, "STAGING_URL");
   const headers = accessHeaders(env);
-  const loginPage = await fetcher(new URL("/login", staging), { headers });
+  const loginPage = await fetcher(new URL("/login", staging), { headers, redirect: "manual" });
   assert.equal(loginPage.status, 200, "Authenticated Access request to /login failed.");
   assert((await loginPage.text()).includes("Completar cuenta de prueba"), "The staging demo button is not rendered.");
 
@@ -83,9 +83,31 @@ export async function verifyStaging(env: Environment, fetcher = fetch) {
     method: "POST",
     headers: { ...headers, "Content-Type": "application/json", Origin: staging.origin },
     body: JSON.stringify({ email: env.DEMO_EMAIL, password: env.DEMO_PASSWORD }),
+    redirect: "manual",
   });
   assert.equal(signIn.status, 200, "The staging demo account did not authenticate.");
-  assert(signIn.headers.get("set-cookie"), "The staging login did not create a session.");
+  const setCookie = signIn.headers.get("set-cookie");
+  assert(setCookie, "The staging login did not create a session.");
+  const cookie = setCookie.split(";", 1)[0];
+  assert(cookie.includes("="), "The staging login returned an invalid session cookie.");
+
+  const authenticatedHeaders = { ...headers, Cookie: cookie };
+  const session = await fetcher(new URL("/api/auth/get-session", staging), {
+    headers: authenticatedHeaders,
+    redirect: "manual",
+  });
+  assert.equal(session.status, 200, "The staging session could not be restored.");
+  const sessionBody = await session.json() as { user?: { email?: string } };
+  assert(
+    sessionBody.user?.email?.toLowerCase() === env.DEMO_EMAIL?.trim().toLowerCase(),
+    "The restored staging session does not belong to the configured demo account.",
+  );
+
+  const dashboard = await fetcher(new URL("/dashboard", staging), {
+    headers: authenticatedHeaders,
+    redirect: "manual",
+  });
+  assert.equal(dashboard.status, 200, "The verified staging session cannot access the dashboard.");
 }
 
 async function main(mode: string | undefined) {
