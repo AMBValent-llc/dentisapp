@@ -52,8 +52,8 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
   return (
     <div className={cn("flex min-h-screen flex-col", landing && "overflow-x-hidden bg-[#f8fbfb]")}>
       <a className="fixed left-4 top-3 z-100 -translate-y-24 rounded-xl bg-white px-4 py-3 font-bold text-primary-dark shadow-card transition-transform focus:translate-y-0 motion-reduce:transition-none" href="#main-content">Saltar al contenido principal</a>
-      <header className={cn("fixed inset-x-0 top-0 z-50 flex min-h-16 flex-wrap items-center justify-between border-b px-[max(1.25rem,calc((100vw-1180px)/2))] py-2.5 transition-all duration-300 motion-reduce:transition-none", elevatedHeader ? "border-line/90 bg-white/90 shadow-sm backdrop-blur-xl" : "border-transparent bg-linear-to-r from-[#075e68] via-[#08717d] to-primary")}>
-        <Link className={cn("inline-flex min-h-11 items-center gap-2 text-2xl font-black tracking-[-.04em] no-underline transition-colors duration-300 motion-reduce:transition-none", elevatedHeader ? "text-primary-dark" : "text-white")} href="/" aria-label="Docli, inicio">
+      <header className={cn("fixed inset-x-0 top-0 z-50 flex min-h-16 flex-wrap items-center justify-between border-b px-[max(1.25rem,calc((100vw-1180px)/2))] py-2.5 transition-all duration-300 motion-reduce:transition-none", elevatedHeader ? "border-line/90 bg-white shadow-sm" : "border-transparent bg-linear-to-r from-[#075e68] via-[#08717d] to-primary")}>
+        <Link className={cn("inline-flex min-h-11 items-center gap-2 text-2xl font-black tracking-[-.04em] no-underline transition-colors duration-300 motion-reduce:transition-none", elevatedHeader ? "text-primary" : "text-white")} href="/" aria-label="Docli, inicio">
           <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-white p-0.5 shadow-sm ring-1 ring-black/5" aria-hidden="true">
             <Image className="size-full object-contain" src="/docli-isotipo.png" width={40} height={40} alt="" priority />
           </span>
@@ -73,10 +73,10 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
       </header>
       <div className={cn("h-16 shrink-0", landing && "bg-linear-to-r from-[#075e68] via-[#08717d] to-primary")} aria-hidden="true" />
       {children}
-      <footer className={cn("mt-auto text-center text-sm", landing ? "grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t border-line bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-6 max-sm:grid-cols-[1fr_auto] max-[480px]:grid-cols-1 max-[480px]:gap-3" : "bg-[#112b33] p-5 text-[#cbd8db]")}>
+      <footer className={cn("mt-auto text-center text-sm", landing ? "grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t border-line bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-6 max-[880px]:grid-cols-[1fr_auto] max-[480px]:grid-cols-1 max-[480px]:gap-3" : "bg-[#112b33] p-5 text-[#cbd8db]")}>
         {landing ? <>
-          <Link className="inline-flex min-h-11 items-center text-left text-xl font-black tracking-[-.04em] no-underline max-[480px]:justify-center" href="/">Docli</Link>
-          <p className="text-xs text-muted max-sm:hidden">Procesos claros. Equipos coordinados.</p>
+          <Link className="inline-flex min-h-11 items-center text-left text-xl font-black tracking-[-.04em] text-primary no-underline max-[480px]:justify-center" href="/">Docli</Link>
+          <p className="text-xs text-muted max-[880px]:hidden">Procesos claros. Equipos coordinados.</p>
           <div className="flex flex-col items-end gap-1.5 text-xs leading-none text-muted max-[480px]:items-center"><span>© 2026 Docli</span><AmbValentCredit /></div>
         </> : <div className="grid justify-items-center gap-2"><span>© 2026 Docli. Todos los derechos reservados.</span><AmbValentCredit dark /></div>}
       </footer>

@@ -93,10 +93,10 @@ export function AppShell({ children, userName, organizationName, role }: { child
   const roleLabel = roleLabels[role] ?? "Miembro";
 
   return <div className="flex min-h-screen flex-col">
-    <header className="sticky top-0 z-40 h-14.5 border-b border-line bg-white/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 h-14.5 border-b border-line bg-white">
       <nav className="flex h-full items-center justify-between gap-4 px-4 max-sm:gap-2 max-sm:px-2.5" aria-label="Barra principal">
         <button ref={toggleRef} className="hidden size-9.5 rounded-xl border border-line bg-white max-[880px]:block" type="button" aria-controls="app-sidebar" aria-expanded={sidebar} aria-label={sidebar ? "Cerrar navegación" : "Abrir navegación"} onClick={() => setSidebar((value) => !value)}>☰</button>
-        <Link className="inline-flex min-h-11 items-center gap-2 text-lg font-black no-underline max-[880px]:text-[0]" href="/dashboard" aria-label="Docli, dashboard">
+        <Link className="inline-flex min-h-11 items-center gap-2 text-lg font-black text-primary no-underline max-[880px]:text-[0]" href="/dashboard" aria-label="Docli, dashboard">
           <Image className="size-8 shrink-0 object-contain" src="/docli-isotipo.png" width={32} height={32} alt="" />
           Docli
         </Link>
