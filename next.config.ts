@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   webpack(config, { isServer, webpack }) {
     if (isServer && process.env.PRISMA_CLIENT_RUNTIME === "cloudflare") {
+      config.output.environment = { ...config.output.environment, dynamicImport: true };
       config.plugins.push(new webpack.NormalModuleReplacementPlugin(
         /[/\\]generated[/\\]prisma[/\\]client(?:\.ts)?$/,
         path.resolve(process.cwd(), "generated/prisma-cloudflare/client.ts"),
