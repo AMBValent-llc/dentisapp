@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
         callback: (error?: Error | null, result?: string) => void,
       ) => {
         if (context && request?.endsWith(".wasm?module")) {
-          return callback(null, `commonjs ${path.resolve(context, request.slice(0, -7))}`);
+          return callback(null, `import ${path.resolve(context, request.slice(0, -7))}`);
         }
         callback();
       });
