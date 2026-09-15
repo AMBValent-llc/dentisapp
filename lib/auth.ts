@@ -11,6 +11,7 @@ function createAuth() {
     secret: process.env.BETTER_AUTH_SECRET,
     database: prismaAdapter(prisma, { provider: "postgresql" }),
     emailAndPassword: { enabled: true, minPasswordLength: 8 },
+    advanced: { ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] } },
     trustedOrigins: baseURL ? [new URL(baseURL).origin] : [],
   });
 }

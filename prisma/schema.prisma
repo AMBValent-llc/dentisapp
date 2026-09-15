@@ -3,6 +3,12 @@ generator client {
   output   = "../generated/prisma"
 }
 
+generator cloudflareClient {
+  provider = "prisma-client"
+  output   = "../generated/prisma-cloudflare"
+  runtime  = "cloudflare"
+}
+
 datasource db {
   provider = "postgresql"
 }
