@@ -3,9 +3,6 @@ import { eq } from "drizzle-orm";
 import { pathToFileURL } from "node:url";
 import { clinicalHistories, consents, documents, exams, memberships, organizations, patients, processes, processSteps, referrals, tasks, users } from "../lib/db/schema";
 
-const email = "admin@docli.local";
-const password = "DocliDemo2026!";
-
 export async function seed() {
   loadEnvConfig(process.cwd());
   if (!["development", "test"].includes(process.env.NODE_ENV ?? "") || process.env.ALLOW_DEMO_SEED !== "true") {
@@ -14,6 +11,11 @@ export async function seed() {
   const url = new URL(process.env.DATABASE_URL ?? "");
   if (!process.env.DATABASE_TARGET_HOST || url.hostname !== process.env.DATABASE_TARGET_HOST) {
     throw new Error("Set DATABASE_TARGET_HOST to the verified non-production DATABASE_URL hostname.");
+  }
+  const email = process.env.DEMO_EMAIL?.trim().toLowerCase();
+  const password = process.env.DEMO_PASSWORD;
+  if (!email || !password || password.length < 12) {
+    throw new Error("Set DEMO_EMAIL and a DEMO_PASSWORD of at least 12 characters.");
   }
   const { db } = await import("../lib/db");
   const { getAuth } = await import("../lib/auth");
@@ -27,6 +29,15 @@ export async function seed() {
     where: (t, { and, eq }) => and(eq(t.userId, user.id), eq(t.providerId, "credential")),
   });
   if (!credential?.password) throw new Error("Demo user has no password credential; refusing to create inconsistent demo data.");
+  const origin = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+  const verification = await getAuth().handler(new Request(`${origin}/api/auth/sign-in/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: origin },
+    body: JSON.stringify({ email, password }),
+  }));
+  if (!verification.ok) {
+    throw new Error("Demo credentials do not authenticate; refusing to enable a misleading demo login.");
+  }
   await db.update(users).set({ name: "Andrés Torres" }).where(eq(users.id, user.id));
 
   const [organization] = await db.insert(organizations).values({

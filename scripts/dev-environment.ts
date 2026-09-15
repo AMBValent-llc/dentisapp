@@ -56,6 +56,24 @@ export function chooseLocalSecret(
   return !provisioned && explicit && Buffer.byteLength(explicit) >= 32 ? explicit : generate();
 }
 
+export function chooseDemoCredentials(
+  source: string,
+  generate = () => randomBytes(18).toString("base64url"),
+) {
+  const email = readEnvValue(source, "DEMO_EMAIL")?.trim().toLowerCase() || "admin@docli.local";
+  const configuredPassword = readEnvValue(source, "DEMO_PASSWORD");
+  if (configuredPassword && (configuredPassword.length < 12 || /[$\\'"`\r\n]/.test(configuredPassword))) {
+    throw new Error(
+      "DEMO_PASSWORD must contain at least 12 characters and cannot contain quotes, backticks, "
+      + "dollar signs, backslashes, or line breaks because those values do not round-trip safely through dotenv.",
+    );
+  }
+  return {
+    email,
+    password: configuredPassword || generate(),
+  };
+}
+
 function parseDatabaseUrl(value: string | undefined) {
   if (!value) return undefined;
   try {
@@ -212,6 +230,31 @@ function runMigration(databaseUrl: string) {
   console.log("Applied the checked-in database migrations.");
 }
 
+function runDemoSeed(databaseUrl: string, email: string, password: string) {
+  const url = new URL(databaseUrl);
+  const result = spawnSync(
+    process.execPath,
+    ["--import", "tsx", "scripts/seed.ts"],
+    {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        NODE_ENV: "development",
+        DATABASE_URL: databaseUrl,
+        DATABASE_TARGET_HOST: url.hostname,
+        ALLOW_DEMO_SEED: "true",
+        DEMO_EMAIL: email,
+        DEMO_PASSWORD: password,
+      },
+    },
+  );
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`Demo data provisioning failed:\n${redact(result.stderr || result.stdout)}`);
+  }
+  console.log("Provisioned and verified the local demo account.");
+}
+
 type MigrationState = {
   applied: number;
   pending: number;
@@ -260,7 +303,7 @@ function verifyMigrations(databaseUrl: string) {
   }
 }
 
-function setupEnvironment() {
+function setupEnvironment(forceDemo = false) {
   const source = existsSync(localEnvPath) ? readFileSync(localEnvPath, "utf8") : "";
   loadDevelopmentEnv();
   let databaseUrl = process.env.DATABASE_URL;
@@ -275,6 +318,8 @@ function setupEnvironment() {
 
   const currentSource = existsSync(localEnvPath) ? readFileSync(localEnvPath, "utf8") : source;
   const secret = chooseLocalSecret(source, provisioned);
+  const enableDemo = provisioned || forceDemo || readEnvValue(currentSource, "ENABLE_DEMO_LOGIN") === "true";
+  const demo = enableDemo ? chooseDemoCredentials(currentSource) : undefined;
   const configured = {
     ...process.env,
     DATABASE_URL: databaseUrl,
@@ -291,21 +336,33 @@ function setupEnvironment() {
       + `Retry with DATABASE_TARGET_HOST=${targetHost} npm run dev:setup.`,
     );
   }
-  writePrivateEnv(localEnvPath, updateEnvText(currentSource, {
+  let updatedSource = updateEnvText(currentSource, {
     DATABASE_URL: databaseUrl,
     BETTER_AUTH_SECRET: secret,
     BETTER_AUTH_URL: "http://localhost:3000",
     NEXT_PUBLIC_APP_URL: "http://localhost:3000",
-  }));
+    ...(demo ? {
+      ENABLE_DEMO_LOGIN: "false",
+      DEMO_EMAIL: demo.email,
+      DEMO_PASSWORD: demo.password,
+    } : {}),
+  });
+  writePrivateEnv(localEnvPath, updatedSource);
   runMigration(databaseUrl);
   verifyMigrations(databaseUrl);
+  if (demo) {
+    runDemoSeed(databaseUrl, demo.email, demo.password);
+    updatedSource = updateEnvText(updatedSource, { ENABLE_DEMO_LOGIN: "true" });
+    writePrivateEnv(localEnvPath, updatedSource);
+  }
   console.log("Local backend configuration is ready in .env.local. Run `npm run dev`.");
 }
 
 export function runDevEnvironment(mode = process.argv[2]) {
   if (mode === "--check") return checkEnvironment();
   if (mode === "--setup") return setupEnvironment();
-  throw new Error("Use --check or --setup.");
+  if (mode === "--setup-demo") return setupEnvironment(true);
+  throw new Error("Use --check, --setup, or --setup-demo.");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import {
   chooseLocalSecret,
+  chooseDemoCredentials,
   developmentEnvironmentErrors,
   parseClaimState,
   parseMigrationState,
@@ -72,6 +73,25 @@ test("setup never reuses an ambient secret for a newly provisioned database", ()
   assert.equal(chooseLocalSecret('BETTER_AUTH_SECRET="explicit-local-secret-with-at-least-32-bytes"\n', false), "explicit-local-secret-with-at-least-32-bytes");
   assert.equal(chooseLocalSecret('BETTER_AUTH_SECRET="explicit-local-secret-with-at-least-32-bytes"\n', true, () => generated), generated);
   assert.equal(chooseLocalSecret("", false, () => generated), generated);
+});
+
+test("demo setup preserves valid local credentials and generates missing passwords", () => {
+  assert.deepEqual(
+    chooseDemoCredentials('DEMO_EMAIL="Owner@Example.Test"\nDEMO_PASSWORD="chosen-local-password"\n'),
+    { email: "owner@example.test", password: "chosen-local-password" },
+  );
+  assert.deepEqual(
+    chooseDemoCredentials("", () => "generated-local-demo-password"),
+    { email: "admin@docli.local", password: "generated-local-demo-password" },
+  );
+  assert.throws(
+    () => chooseDemoCredentials('DEMO_PASSWORD="abcdefghijkl$HOME"\n'),
+    /do not round-trip safely through dotenv/,
+  );
+  assert.throws(
+    () => chooseDemoCredentials('DEMO_PASSWORD="too-short"\n'),
+    /at least 12 characters/,
+  );
 });
 
 test("setup makes an existing dotenv file private", () => {
