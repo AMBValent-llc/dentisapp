@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx scripts/dev-environment.ts --check && next dev",
+    "dev:setup": "tsx scripts/dev-environment.ts --setup",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -18,7 +19,7 @@
     "db:adopt": "tsx scripts/migrate.ts --adopt-prisma",
     "db:seed": "tsx scripts/seed.ts",
     "db:status": "tsx scripts/migrate.ts --check",
-    "test": "tsx --test scripts/auth-flow.test.ts scripts/client-errors.test.ts scripts/runtime-imports.test.ts scripts/search.test.ts",
+    "test": "tsx --test scripts/auth-flow.test.ts scripts/client-errors.test.ts scripts/dev-environment.test.ts scripts/runtime-imports.test.ts scripts/search.test.ts",
     "test:api": "tsx scripts/integration.ts",
     "test:api:isolated": "tsx scripts/run-isolated-api-tests.ts",
     "test:db": "tsx --test scripts/db-contract.test.ts",

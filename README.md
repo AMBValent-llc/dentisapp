@@ -12,18 +12,24 @@ Docli es una aplicación Next.js 15 / React 19 para procesos operativos y gesti�
 
 ## Configuración
 
-Requiere Node.js 22. Copia `.env.example` a `.env`, genera `BETTER_AUTH_SECRET` con al menos 32 bytes aleatorios y configura `DATABASE_URL` con una rama de desarrollo de Neon. `.env*` está ignorado salvo el ejemplo. No se necesita base shadow ni generación de un cliente ORM.
-
-El cliente de autenticación siempre usa `/api/auth` en el mismo origen que la página. En desarrollo, el servidor deriva el origen del request, por lo que `localhost` funciona en cualquier puerto aunque `.env` conserve otra URL local. En producción exige `BETTER_AUTH_URL` y confía únicamente en ese origen HTTPS. Una página local nunca debe llamar directamente al Worker. No configures `NEXT_PUBLIC_AUTH_URL`, `NEXT_PUBLIC_BETTER_AUTH_URL` ni otras variables públicas de Better Auth para apuntar al Worker. Después de cambiar variables públicas, reinicia el servidor de desarrollo para recompilar el cliente.
-
-Para una base nueva de desarrollo:
+Requiere Node.js 22. El backend vive en los Route Handlers de este mismo proyecto, pero PostgreSQL no: el driver HTTP actual requiere Neon y no es compatible con un PostgreSQL local por TCP. Para una instalación limpia, el flujo estándar crea un proyecto Neon temporal, vacío y aislado, genera un secreto local y aplica las migraciones sin reutilizar ni descargar credenciales de producción:
 
 ```bash
 npm ci
-# DATABASE_TARGET_HOST debe coincidir exactamente con el host de DATABASE_URL.
-ALLOW_DATABASE_MIGRATIONS=true DATABASE_TARGET_HOST="host-de-tu-rama.neon.tech" npm run db:deploy
+npm run dev:setup
 npm run dev
 ```
+
+`dev:setup` usa `neonctl claim create` fijado a una versión conocida. No requiere cuenta, escribe las credenciales únicamente en `.env.local` (ignorado por Git y con permisos `0600`), genera siempre un secreto de autenticación nuevo para el proyecto temporal, muestra su expiración y autoriza migraciones solo contra el host que acaba de crear. El proyecto reclamable expira automáticamente si no se reclama; una ejecución posterior reemplaza únicamente contextos `.neon` verificados como no reclamados o expirados y nunca elimina un proyecto reclamado. `npm run dev` ejecuta un preflight determinista antes de Next y se detiene si faltan `DATABASE_URL` o `BETTER_AUTH_SECRET`, si la URL no es Neon/TLS, si hay migraciones pendientes o si un origen local apunta fuera del loopback; no presenta una UI que parezca funcional con el backend roto.
+
+Si ya tienes un proyecto o rama Neon exclusiva para desarrollo, configura `DATABASE_URL` y un `BETTER_AUTH_SECRET` de al menos 32 bytes en `.env.local`. Confirma explícitamente su host para que `dev:setup` pueda aplicar y comprobar las migraciones:
+
+```bash
+DATABASE_TARGET_HOST="host-de-tu-rama.neon.tech" npm run dev:setup
+npm run db:status
+```
+
+El cliente de autenticación siempre usa `/api/auth` en el mismo origen que la página. En desarrollo, el servidor deriva el origen del request, por lo que `localhost` funciona en cualquier puerto aunque `.env` conserve otra URL local. En producción exige `BETTER_AUTH_URL` y confía únicamente en ese origen HTTPS. Una página local nunca debe llamar directamente al Worker. No configures `NEXT_PUBLIC_AUTH_URL`, `NEXT_PUBLIC_BETTER_AUTH_URL` ni otras variables públicas de Better Auth para apuntar al Worker. Después de cambiar variables públicas, reinicia el servidor de desarrollo para recompilar el cliente.
 
 `npm run db:status` inspecciona el estado sin escribir. Después de cambiar el esquema, `npm run db:generate` genera migraciones SQL; revísalas antes de aplicarlas con `db:deploy`. El driver HTTP requiere Neon, no una instancia PostgreSQL local conectada directamente por TCP.
 
@@ -95,7 +101,7 @@ Después de publicar, verifica `/login` (200), `/api/auth/get-session` sin cooki
 
 `POST /api/auth/sign-in/email` responde `401 INVALID_EMAIL_OR_PASSWORD` cuando el correo no existe o la contraseña no coincide. Es un rechazo esperado y la UI muestra el mismo mensaje en ambos casos para no revelar cuentas registradas. Una petición iniciada en `localhost` no debe ir directamente al Worker: además de romper el contrato de cookies del mismo origen, el Worker la rechaza por origen no confiable.
 
-Si `/login` o `/api/auth/get-session` responden `500` con `DATABASE_URL is required`, la instancia local no tiene backend de autenticación configurado: copia `.env.example` a `.env`, completa una URL de una rama Neon de desarrollo y reinicia `npm run dev`. No uses la base de producción para resolver este error.
+Si una instancia iniciada por fuera de `npm run dev` responde `500` con `DATABASE_URL is required`, no tiene configurado el almacenamiento del backend. Detén esa instancia y ejecuta `npm run dev:setup && npm run dev`; no apuntes el navegador al Worker ni copies la conexión de producción.
 
 ## API
 
