@@ -110,7 +110,7 @@ Configure exclusivamente en el environment `staging`:
 | Secret | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | Permisos limitados al Worker demo |
 | Secret | `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Service Token admitido por la política Access |
 
-El workflow valida aislamiento, migraciones y cuenta; solo después instala los secretos en `mediflow-demo`, despliega y comprueba por Access que `/login` contiene **Completar cuenta de prueba** y que el login devuelve una cookie de sesión. Los valores secretos no se imprimen. No copie ningún secreto de producción a este environment.
+El workflow valida aislamiento, migraciones y cuenta; solo después instala los secretos en `mediflow-demo`, despliega y comprueba por Access que `/login` contiene **Completar cuenta de prueba**, que el login devuelve `200` y una cookie, que esa cookie restaura la sesión de `DEMO_EMAIL` y que permite abrir `/dashboard` con `200`. Los valores secretos no se imprimen. No copie la cuenta local `admin@docli.local`, sus credenciales ni ningún secreto de producción a este environment: la cuenta staging debe crearse y verificarse contra la misma `DATABASE_URL` demo que usa `mediflow-demo`.
 
 Node.js y Workers usan el mismo driver Neon HTTP y el mismo esquema Drizzle. La conexión y Better Auth se inicializan de forma diferida; importar sus módulos durante el build no necesita secretos. No se generan clientes Prisma ni se aplican reemplazos Webpack para WASM.
 
