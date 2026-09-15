@@ -7,7 +7,7 @@ import { memberships, type MembershipRole } from "@/lib/db/schema";
 
 export async function getSession() {
   const requestHeaders = await headers();
-  return getAuth().api.getSession({ headers: requestHeaders });
+  return getAuth(requestHeaders).api.getSession({ headers: requestHeaders });
 }
 
 export async function requirePageContext() {
