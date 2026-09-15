@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "./ui";
+import { AmbValentCredit } from "./AmbValentCredit";
 
 const links = [
   { href: "/nosotros", label: "¿Quiénes somos?" },
@@ -58,8 +59,8 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
         {landing ? <>
           <Link className="text-left text-xl font-black tracking-[-.04em] no-underline" href="/">Docli</Link>
           <p className="text-xs text-muted max-sm:hidden">Procesos claros. Equipos coordinados.</p>
-          <div className="grid justify-items-end gap-1 text-xs text-muted"><span>© 2026 Docli</span><small>Diseñado y desarrollado por <strong className="text-ink">AMBValent</strong></small></div>
-        </> : <div className="grid gap-1"><span>© 2026 Docli. Todos los derechos reservados.</span><small>Diseñado y desarrollado por <strong className="text-white">AMBValent</strong></small></div>}
+          <div className="grid justify-items-end gap-1 text-xs text-muted"><span>© 2026 Docli</span><AmbValentCredit /></div>
+        </> : <div className="grid justify-items-center gap-2"><span>© 2026 Docli. Todos los derechos reservados.</span><AmbValentCredit dark /></div>}
       </footer>
     </div>
   );
