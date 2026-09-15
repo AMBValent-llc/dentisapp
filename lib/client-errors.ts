@@ -12,12 +12,42 @@ const translations: Array<[RegExp, string]> = [
   [/forbidden|insufficient permission/i, "Tu cuenta no tiene permisos suficientes para realizar esta acción."],
 ];
 
+type AuthClientError = {
+  code?: string;
+  message?: string;
+  status?: number;
+};
+
+const invalidLoginCodes = new Set([
+  "ACCOUNT_NOT_FOUND",
+  "CREDENTIAL_ACCOUNT_NOT_FOUND",
+  "EMAIL_NOT_VERIFIED",
+  "INVALID_EMAIL_OR_PASSWORD",
+  "INVALID_PASSWORD",
+  "INVALID_USER",
+  "USER_EMAIL_NOT_FOUND",
+  "USER_NOT_FOUND",
+]);
+
+const invalidLoginMessage = "El correo o la contraseña no son correctos.";
+
 export function getSpanishError(message: string | null | undefined, fallback: string) {
   if (!message) return fallback;
   const translation = translations.find(([pattern]) => pattern.test(message));
   if (translation) return translation[1];
   const looksEnglish = /\b(the|invalid|failed|error|user|password|email|session|request|account)\b/i.test(message);
   return looksEnglish ? fallback : message;
+}
+
+export function getLoginError(error: AuthClientError | null | undefined) {
+  if (
+    error?.status === 401 ||
+    (error?.code && invalidLoginCodes.has(error.code)) ||
+    /user (?:email )?not found|account not found|credential account not found|email not verified/i.test(error?.message ?? "")
+  ) {
+    return invalidLoginMessage;
+  }
+  return getSpanishError(error?.message, "No fue posible iniciar sesión. Verifica tus datos e inténtalo nuevamente.");
 }
 
 export async function readApiError(response: Response, fallback: string) {

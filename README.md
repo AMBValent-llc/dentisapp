@@ -14,6 +14,8 @@ Docli es una aplicación Next.js 15 / React 19 para procesos operativos y gesti�
 
 Requiere Node.js 22. Copia `.env.example` a `.env`, genera `BETTER_AUTH_SECRET` con al menos 32 bytes aleatorios y configura `DATABASE_URL` con una rama de desarrollo de Neon. `.env*` está ignorado salvo el ejemplo. No se necesita base shadow ni generación de un cliente ORM.
 
+El cliente de autenticación siempre usa `/api/auth` en el mismo origen que la página. En desarrollo, `BETTER_AUTH_URL` y `NEXT_PUBLIC_APP_URL` deben ser `http://localhost:3000`; no configures `NEXT_PUBLIC_AUTH_URL`, `NEXT_PUBLIC_BETTER_AUTH_URL` ni otras variables públicas de Better Auth para apuntar al Worker. Después de cambiar variables públicas, reinicia el servidor de desarrollo para recompilar el cliente.
+
 Para una base nueva de desarrollo:
 
 ```bash
@@ -50,9 +52,10 @@ Solo se permite en desarrollo/pruebas, con autorización explícita y confirmaci
 
 ```bash
 NODE_ENV=test ALLOW_DEMO_SEED=true DATABASE_TARGET_HOST="host-de-la-rama.neon.tech" npm run db:seed
+NEXT_PUBLIC_ENABLE_DEMO_LOGIN=true NEXT_PUBLIC_DEMO_EMAIL="admin@docli.local" NEXT_PUBLIC_DEMO_PASSWORD="DocliDemo2026!" npm run dev
 ```
 
-No actives estas opciones en el Worker ni ejecutes el seed contra producción.
+El botón para completar esta cuenta solo aparece cuando se habilita y se proporcionan ambas credenciales públicas de demostración. No actives estas opciones en el Worker ni ejecutes el seed contra producción.
 
 ## Despliegue en Cloudflare Workers
 
@@ -89,6 +92,8 @@ Node.js y Workers usan el mismo driver Neon HTTP y el mismo esquema Drizzle. La 
 Las operaciones de dominio con varias escrituras (workspace y membresía, proceso y pasos, perfil) usan `db.batch`, que es atómico. No uses callbacks de `db.transaction` con Neon HTTP. El adaptador de Better Auth mantiene las transacciones interactivas desactivadas; no habilites `transaction: true` sin cambiar a un driver compatible.
 
 Después de publicar, verifica `/login` (200), `/api/auth/get-session` sin cookies (200 con `null`) y `/api/patients` sin cookies (401). Una portada que responde 200 no demuestra que la autenticación o PostgreSQL funcionen. Comprueba también un login real y una lectura autenticada; ante errores 500 revisa los logs del Worker y sus secretos de runtime.
+
+`POST /api/auth/sign-in/email` responde `401 INVALID_EMAIL_OR_PASSWORD` cuando el correo no existe o la contraseña no coincide. Es un rechazo esperado y la UI muestra el mismo mensaje en ambos casos para no revelar cuentas registradas. Una petición iniciada en `localhost` no debe ir directamente al Worker: además de romper el contrato de cookies del mismo origen, el Worker la rechaza por origen no confiable.
 
 ## API
 
