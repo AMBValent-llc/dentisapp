@@ -53,7 +53,7 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
     <div className={cn("flex min-h-screen flex-col", landing && "overflow-x-hidden bg-[#f8fbfb]")}>
       <a className="fixed left-4 top-3 z-100 -translate-y-24 rounded-xl bg-white px-4 py-3 font-bold text-primary-dark shadow-card transition-transform focus:translate-y-0 motion-reduce:transition-none" href="#main-content">Saltar al contenido principal</a>
       <header className={cn("fixed inset-x-0 top-0 z-50 flex min-h-16 flex-wrap items-center justify-between border-b px-[max(1.25rem,calc((100vw-1180px)/2))] py-2.5 transition-all duration-300 motion-reduce:transition-none", elevatedHeader ? "border-line/90 bg-white/90 shadow-sm backdrop-blur-xl" : "border-transparent bg-linear-to-r from-[#075e68] via-[#08717d] to-primary")}>
-        <Link className={cn("inline-flex min-h-11 items-center gap-2 text-2xl font-black tracking-[-.04em] no-underline transition-colors duration-300 motion-reduce:transition-none", elevatedHeader ? "text-ink" : "text-white")} href="/" aria-label="Docli, inicio">
+        <Link className={cn("inline-flex min-h-11 items-center gap-2 text-2xl font-black tracking-[-.04em] no-underline transition-colors duration-300 motion-reduce:transition-none", elevatedHeader ? "text-primary-dark" : "text-white")} href="/" aria-label="Docli, inicio">
           <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-white p-0.5 shadow-sm ring-1 ring-black/5" aria-hidden="true">
             <Image className="size-full object-contain" src="/docli-isotipo.png" width={40} height={40} alt="" priority />
           </span>
