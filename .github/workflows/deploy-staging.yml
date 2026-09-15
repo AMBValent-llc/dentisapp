@@ -1,0 +1,83 @@
+name: Deploy protected staging
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      APP_ENV: staging
+      ENABLE_DEMO_LOGIN: "true"
+      STAGING_URL: https://mediflow-demo.accounts-865.workers.dev
+      BETTER_AUTH_URL: https://mediflow-demo.accounts-865.workers.dev
+      DEMO_ALLOWED_ORIGIN: https://mediflow-demo.accounts-865.workers.dev
+      DEMO_ALLOWED_HOSTNAME: mediflow-demo.accounts-865.workers.dev
+      PRODUCTION_HOSTNAME: mediflow.accounts-865.workers.dev
+      DATABASE_TARGET_HOST: ${{ vars.DATABASE_TARGET_HOST }}
+      PRODUCTION_DATABASE_HOST: ${{ vars.PRODUCTION_DATABASE_HOST }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint && npx tsc --noEmit && npm test
+      - name: Reject unsafe staging configuration
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+        run: npm run cf:preflight:staging
+      - name: Reject publicly reachable staging
+        run: npm run cf:verify-access:staging
+      - name: Migrate and verify demo account
+        env:
+          ALLOW_DATABASE_MIGRATIONS: "true"
+          ALLOW_DEMO_SEED: "true"
+          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+        run: npm run db:deploy && npm run db:seed
+      - name: Configure staging-only Worker secrets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          printf '%s' "$DATABASE_URL" | npx wrangler secret put DATABASE_URL --env staging
+          printf '%s' "$DATABASE_TARGET_HOST" | npx wrangler secret put DATABASE_TARGET_HOST --env staging
+          printf '%s' "$PRODUCTION_DATABASE_HOST" | npx wrangler secret put PRODUCTION_DATABASE_HOST --env staging
+          printf '%s' "$BETTER_AUTH_SECRET" | npx wrangler secret put BETTER_AUTH_SECRET --env staging
+          printf '%s' "$DEMO_EMAIL" | npx wrangler secret put DEMO_EMAIL --env staging
+          printf '%s' "$DEMO_PASSWORD" | npx wrangler secret put DEMO_PASSWORD --env staging
+          printf '%s' "$ENABLE_DEMO_LOGIN" | npx wrangler secret put ENABLE_DEMO_LOGIN --env staging
+      - name: Deploy isolated Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run cf:build:staging && npx opennextjs-cloudflare deploy --env staging
+      - name: Verify protected button and login
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: npm run cf:verify:staging

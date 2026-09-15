@@ -58,7 +58,7 @@ DEMO_PASSWORD="una-clave-local-de-al-menos-12-caracteres"
 DATABASE_TARGET_HOST="host-de-la-rama.neon.tech" npm run dev:setup:demo
 ```
 
-El seed es idempotente, crea la contraseña mediante Better Auth (queda hasheada), comprueba el login y carga procesos, pasos, tareas, referencias documentales, pacientes, historias, consentimientos, remisiones y exámenes. Si la cuenta ya existe con otra contraseña, el setup falla y mantiene el botón deshabilitado en vez de prometer un acceso inválido. No actives estas opciones en el Worker ni ejecutes el seed contra producción.
+El seed es idempotente, crea la contraseña mediante Better Auth (queda hasheada), comprueba el login y carga procesos, pasos, tareas, referencias documentales, pacientes, historias, consentimientos, remisiones y exámenes. Si la cuenta ya existe con otra contraseña, el setup falla y mantiene el botón deshabilitado en vez de prometer un acceso inválido. No ejecutes el seed contra producción.
 
 Las contraseñas configuradas manualmente deben tener al menos 12 caracteres y no usar comillas, acentos graves, `$`, barras invertidas ni saltos de línea, porque dotenv transforma esos caracteres al cargar el entorno. El setup rechaza esos valores antes de crear o habilitar la cuenta; las contraseñas aleatorias generadas automáticamente son seguras para dotenv.
 
@@ -91,6 +91,26 @@ Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better
    ```
 
 Para Cloudflare Workers Builds usa la raíz del repositorio, `npm run cf:build` como comando de build y `npx opennextjs-cloudflare deploy` como comando de deploy. En ramas de vista previa usa `npx opennextjs-cloudflare upload` después del build, con una base y secretos separados de producción. `.open-next/worker.js` y los demás artefactos no se versionan. No hay un `build.command` en Wrangler: se compila una sola vez, explícitamente, antes del deploy.
+
+### Demo/staging protegido
+
+`wrangler.jsonc` declara el entorno `staging` como un Worker independiente (`mediflow-demo`) y conserva `mediflow` para producción. El botón demo necesita simultáneamente `APP_ENV=staging`, `ENABLE_DEMO_LOGIN=true`, el hostname exacto de staging, un origen HTTPS exacto en `DEMO_ALLOWED_ORIGIN` y Better Auth, y una conexión Neon cuyo hostname coincida con `DATABASE_TARGET_HOST` y sea distinto de `PRODUCTION_DATABASE_HOST`. En localhost se mantiene el gate de desarrollo existente. Las credenciales continúan pasando únicamente desde el Server Component; no existen variables `NEXT_PUBLIC_*` con correo o contraseña.
+
+El workflow manual **Deploy protected staging** usa el environment de GitHub `staging`. Antes de escribir o desplegar, exige que `https://mediflow-demo.accounts-865.workers.dev` ya esté cubierto por una aplicación **Cloudflare Access Self-hosted**: una petición anónima a `/login` debe redirigir por HTTPS al login de `*.cloudflareaccess.com`, y un Service Token debe tener acceso. Configure primero esa aplicación y una política que no permita acceso público. Esta comprobación es obligatoria y hace fallar el despliegue si el Worker responde públicamente.
+
+Configure exclusivamente en el environment `staging`:
+
+| Tipo | Nombre | Requisito |
+| --- | --- | --- |
+| Secret | `DATABASE_URL` | Conexión a un proyecto o branch Neon exclusivo de demo |
+| Variable | `DATABASE_TARGET_HOST` | Host exacto de esa conexión |
+| Variable | `PRODUCTION_DATABASE_HOST` | Host de producción, solo para comprobar que sea distinto |
+| Secret | `BETTER_AUTH_SECRET` | Secreto exclusivo de staging, mínimo 32 caracteres |
+| Secret | `DEMO_EMAIL`, `DEMO_PASSWORD` | Cuenta demo; contraseña de al menos 12 caracteres |
+| Secret | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | Permisos limitados al Worker demo |
+| Secret | `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Service Token admitido por la política Access |
+
+El workflow valida aislamiento, migraciones y cuenta; solo después instala los secretos en `mediflow-demo`, despliega y comprueba por Access que `/login` contiene **Completar cuenta de prueba** y que el login devuelve una cookie de sesión. Los valores secretos no se imprimen. No copie ningún secreto de producción a este environment.
 
 Node.js y Workers usan el mismo driver Neon HTTP y el mismo esquema Drizzle. La conexión y Better Auth se inicializan de forma diferida; importar sus módulos durante el build no necesita secretos. No se generan clientes Prisma ni se aplican reemplazos Webpack para WASM.
 
