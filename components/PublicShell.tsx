@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { cn } from "./ui";
 import { AmbValentCredit } from "./AmbValentCredit";
 
@@ -17,6 +17,28 @@ const legalLinks = [
   { href: "/privacidad", label: "Privacidad" },
   { href: "/terminos", label: "Términos" },
 ];
+
+export function PublicFooter() {
+  return (
+    <footer className="mt-auto border-t border-line bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-5 text-sm">
+      <div className="mx-auto flex max-w-295 flex-wrap items-center justify-between gap-x-10 gap-y-3 max-[480px]:justify-center">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 max-[480px]:justify-center">
+          <Link className="inline-flex min-h-11 items-center text-xl font-black tracking-[-.04em] text-primary no-underline" href="/" aria-label="Docli, inicio">Docli</Link>
+          <nav className="flex items-center gap-1" aria-label="Información legal">
+            {legalLinks.map((link) => (
+              <Link className="rounded-lg px-2.5 py-2 font-semibold text-muted no-underline transition-colors hover:bg-primary-soft hover:text-primary-dark motion-reduce:transition-none" href={link.href} key={link.href}>
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-1 text-xs text-muted max-[480px]:justify-center">
+          <AmbValentCredit />
+        </div>
+      </div>
+    </footer>
+  );
+}
 
 export function PublicShell({ children, landing = false }: { children: React.ReactNode; landing?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -78,24 +100,7 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
       </header>
       <div className={cn("h-16 shrink-0", landing && "bg-linear-to-r from-[#075e68] via-[#08717d] to-primary")} aria-hidden="true" />
       {children}
-      <footer className="mt-auto border-t border-line bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-5 text-sm">
-        <div className="mx-auto flex max-w-295 flex-wrap items-center justify-between gap-x-10 gap-y-3 max-[480px]:justify-center">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 max-[480px]:justify-center">
-            <Link className="inline-flex min-h-11 items-center text-xl font-black tracking-[-.04em] text-primary no-underline" href="/" aria-label="Docli, inicio">Docli</Link>
-            <nav className="flex items-center gap-1" aria-label="Información legal">
-              {legalLinks.map((link) => (
-                <Link className="rounded-lg px-2.5 py-2 font-semibold text-muted no-underline transition-colors hover:bg-primary-soft hover:text-primary-dark motion-reduce:transition-none" href={link.href} key={link.href}>
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-1 text-xs text-muted max-[480px]:justify-center">
-            <span>© 2026 Docli</span>
-            <AmbValentCredit />
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { cn } from "./ui";
 import { authClient } from "@/lib/auth-client";
 import { FeedbackDialog } from "./Feedback";
@@ -33,6 +33,10 @@ const roleLabels: Record<string, string> = {
   ADMIN: "Administrador",
   MEMBER: "Colaborador",
 };
+
+export function AppFooter() {
+  return <footer className="mt-auto grid justify-items-center gap-2 bg-[#112b33] p-5 text-center text-xs text-[#cbd8db]"><AmbValentCredit dark /></footer>;
+}
 
 export function AppShell({ children, userName, organizationName, role }: { children: React.ReactNode; userName: string; organizationName: string; role: string }) {
   const [sidebar, setSidebar] = useState(false);
@@ -136,7 +140,7 @@ export function AppShell({ children, userName, organizationName, role }: { child
       </aside>
       <main id="main-content" className="min-w-0 w-full p-[clamp(1.25rem,3vw,2.5rem)] max-sm:p-4">{children}</main>
     </div>
-    <footer className="mt-auto grid justify-items-center gap-2 bg-[#112b33] p-5 text-center text-xs text-[#cbd8db]"><span>© 2026 Docli. Todos los derechos reservados.</span><AmbValentCredit dark /></footer>
+    <AppFooter />
     {toast && <div className="fixed left-1/2 top-18 z-100 max-w-[calc(100vw-2.5rem)] -translate-x-1/2 rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-card" role="status">{toast}</div>}
     {error && <FeedbackDialog message={error} onClose={() => setError("")} />}
     {logout && <div className="fixed inset-0 z-100 grid place-items-center bg-[#0e232a]/52 p-4" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setLogout(false)}>
