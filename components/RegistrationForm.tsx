@@ -113,10 +113,10 @@ export function RegistrationForm({ selectedPlan, existingSession = false }: { se
 
   return (
     <section className="rounded-3xl border border-line bg-white p-[clamp(1.4rem,4vw,2.5rem)] shadow-card">
-      <div className="mb-7 flex items-center gap-3" aria-label={`Paso ${step} de 2`}>
+      <div className="mb-7 flex items-center gap-3" role="status" aria-live="polite" aria-label={`Paso ${step} de 2`}>
         {[1, 2].map((item) => (
           <div className="flex flex-1 items-center gap-2" key={item}>
-            <span className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-black ${item <= step ? "bg-primary text-white" : "bg-canvas text-muted"}`}>{item}</span>
+            <span className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-black ${item <= step ? "bg-primary text-white" : "bg-canvas text-muted"}`} aria-current={item === step ? "step" : undefined}>{item}</span>
             <span className={`text-xs font-bold ${item <= step ? "text-ink" : "text-muted"}`}>{item === 1 ? "Tu equipo" : "Tu acceso"}</span>
             {item === 1 && <i className={`ml-auto h-px flex-1 ${step === 2 ? "bg-primary" : "bg-line"}`} aria-hidden="true" />}
           </div>

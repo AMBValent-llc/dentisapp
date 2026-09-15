@@ -16,7 +16,7 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const menuRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => setOpen(false), [pathname]);
@@ -50,8 +50,9 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
 
   return (
     <div className={cn("flex min-h-screen flex-col", landing && "overflow-x-hidden bg-[#f8fbfb]")}>
+      <a className="fixed left-4 top-3 z-100 -translate-y-24 rounded-xl bg-white px-4 py-3 font-bold text-primary-dark shadow-card transition-transform focus:translate-y-0 motion-reduce:transition-none" href="#main-content">Saltar al contenido principal</a>
       <header className={cn("fixed inset-x-0 top-0 z-50 flex min-h-19 flex-wrap items-center justify-between border-b px-[max(1.25rem,calc((100vw-1180px)/2))] py-3 transition-all duration-300 motion-reduce:transition-none", elevatedHeader ? "border-line/90 bg-white/90 shadow-sm backdrop-blur-xl" : "border-transparent bg-linear-to-r from-[#075e68] via-[#08717d] to-primary")}>
-        <Link className={cn("inline-flex items-center gap-2 text-2xl font-black tracking-[-.04em] no-underline transition-colors duration-300 before:grid before:size-9 before:place-items-center before:rounded-[11px_11px_15px_15px] before:text-base before:shadow-[0_7px_16px_rgb(8_127_140/0.22)] before:transition-colors before:duration-300 before:content-['D'] motion-reduce:transition-none", elevatedHeader ? "text-ink before:bg-linear-to-br before:from-primary before:to-[#36a9a9] before:text-white" : "text-white before:bg-white before:text-primary-dark")} href="/" aria-label="Docli, inicio">Docli</Link>
+        <Link className={cn("inline-flex min-h-11 items-center gap-2 text-2xl font-black tracking-[-.04em] no-underline transition-colors duration-300 before:grid before:size-9 before:place-items-center before:rounded-[11px_11px_15px_15px] before:text-base before:shadow-[0_7px_16px_rgb(8_127_140/0.22)] before:transition-colors before:duration-300 before:content-['D'] motion-reduce:transition-none", elevatedHeader ? "text-ink before:bg-linear-to-br before:from-primary before:to-[#36a9a9] before:text-white" : "text-white before:bg-white before:text-primary-dark")} href="/" aria-label="Docli, inicio">Docli</Link>
         <nav className="flex items-center gap-1 max-[880px]:hidden" aria-label="Navegación principal">
           {links.map((link) => <Link className={cn("rounded-xl px-3.5 py-2.5 font-semibold no-underline transition-colors duration-300 motion-reduce:transition-none", elevatedHeader ? "text-[#405860] hover:bg-primary-soft hover:text-primary-dark aria-[current=page]:bg-primary-soft aria-[current=page]:text-primary-dark" : "text-white/90 hover:bg-white/12 hover:text-white aria-[current=page]:bg-white/15 aria-[current=page]:text-white")} aria-current={pathname === link.href ? "page" : undefined} key={link.href} href={link.href}>{link.label}</Link>)}
           <Link className={cn("ml-1 rounded-xl px-3.5 py-2.5 font-semibold no-underline transition-all duration-300 motion-reduce:transition-none", elevatedHeader ? "bg-primary text-white hover:bg-primary-dark" : "bg-white text-primary-dark shadow-sm hover:-translate-y-0.5 hover:bg-primary-soft")} aria-current={pathname === "/login" ? "page" : undefined} href="/login">Iniciar sesión</Link>
@@ -59,16 +60,16 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
         <button ref={menuButtonRef} className={cn("hidden size-11 rounded-xl border p-2.5 transition-colors duration-300 motion-reduce:transition-none max-[880px]:block", elevatedHeader ? "border-line bg-white" : "border-white/25 bg-white/10 hover:bg-white/15")} type="button" aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? "Cerrar menú de navegación" : "Abrir menú de navegación"} onClick={() => setOpen((value) => !value)}>
           <span className={cn("my-1 block h-0.5 transition-colors", elevatedHeader ? "bg-ink" : "bg-white")} /><span className={cn("my-1 block h-0.5 transition-colors", elevatedHeader ? "bg-ink" : "bg-white")} /><span className={cn("my-1 block h-0.5 transition-colors", elevatedHeader ? "bg-ink" : "bg-white")} />
         </button>
-        <div className={cn("hidden w-full gap-1 rounded-2xl border border-line bg-white p-3 shadow-card", open && "max-[880px]:grid")} id="mobile-menu" ref={menuRef}>
-          {links.map((link) => <Link className="rounded-xl px-3.5 py-2.5 font-semibold text-[#405860] no-underline hover:bg-primary-soft" key={link.href} href={link.href}>{link.label}</Link>)}
-          <Link className="rounded-xl bg-primary px-3.5 py-2.5 font-semibold text-white no-underline" href="/login">Iniciar sesión</Link>
-        </div>
+        <nav className={cn("hidden w-full gap-1 rounded-2xl border border-line bg-white p-3 shadow-card", open && "max-[880px]:grid")} id="mobile-menu" ref={menuRef} aria-label="Navegación móvil">
+          {links.map((link) => <Link className="flex min-h-11 items-center rounded-xl px-3.5 py-2.5 font-semibold text-[#405860] no-underline hover:bg-primary-soft" aria-current={pathname === link.href ? "page" : undefined} key={link.href} href={link.href}>{link.label}</Link>)}
+          <Link className="flex min-h-11 items-center rounded-xl bg-primary px-3.5 py-2.5 font-semibold text-white no-underline" aria-current={pathname === "/login" ? "page" : undefined} href="/login">Iniciar sesión</Link>
+        </nav>
       </header>
       <div className={cn("h-19 shrink-0", landing && "bg-linear-to-r from-[#075e68] via-[#08717d] to-primary")} aria-hidden="true" />
       {children}
       <footer className={cn("mt-auto text-center text-sm", landing ? "grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t border-line bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-6 max-sm:grid-cols-[1fr_auto] max-[480px]:grid-cols-1 max-[480px]:gap-3" : "bg-[#112b33] p-5 text-[#cbd8db]")}>
         {landing ? <>
-          <Link className="text-left text-xl font-black tracking-[-.04em] no-underline max-[480px]:text-center" href="/">Docli</Link>
+          <Link className="inline-flex min-h-11 items-center text-left text-xl font-black tracking-[-.04em] no-underline max-[480px]:justify-center" href="/">Docli</Link>
           <p className="text-xs text-muted max-sm:hidden">Procesos claros. Equipos coordinados.</p>
           <div className="flex flex-col items-end gap-1.5 text-xs leading-none text-muted max-[480px]:items-center"><span>© 2026 Docli</span><AmbValentCredit /></div>
         </> : <div className="grid justify-items-center gap-2"><span>© 2026 Docli. Todos los derechos reservados.</span><AmbValentCredit dark /></div>}

@@ -14,12 +14,23 @@ export function FeedbackDialog({
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeRef.current?.focus();
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key === "Tab") {
+        event.preventDefault();
+        closeRef.current?.focus();
+      }
     };
-    document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
+    };
   }, [onClose]);
 
   return (
@@ -33,7 +44,7 @@ export function FeedbackDialog({
           </div>
         </div>
         <div className="mt-5 flex justify-end">
-          <button ref={closeRef} className="min-h-10 rounded-xl bg-ink px-4 py-2 text-sm font-extrabold text-white transition hover:bg-primary-dark" type="button" onClick={onClose}>Entendido</button>
+          <button ref={closeRef} className="min-h-11 rounded-xl bg-ink px-4 py-2 text-sm font-extrabold text-white transition hover:bg-primary-dark" type="button" onClick={onClose}>Entendido</button>
         </div>
       </section>
     </div>

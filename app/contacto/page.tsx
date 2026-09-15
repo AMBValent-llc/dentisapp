@@ -78,7 +78,7 @@ export default function ContactPage() {
                 <span className="grid size-11 place-items-center rounded-xl bg-primary-soft text-lg font-black text-primary transition group-hover:bg-primary group-hover:text-white" aria-hidden="true">{reason.icon}</span>
                 <h3 className="mb-2 mt-6 text-xl font-bold">{reason.title}</h3>
                 <p className="m-0 flex-1 text-sm leading-6 text-muted">{reason.description}</p>
-                <a className="mt-6 text-sm font-extrabold text-primary no-underline" href="#formulario-contacto">{reason.action} →</a>
+                <a className="mt-4 inline-flex min-h-11 items-center text-sm font-extrabold text-primary no-underline" href="#formulario-contacto">{reason.action} →</a>
               </article>
             ))}
           </div>
@@ -144,7 +144,7 @@ export default function ContactPage() {
           <div className="border-t border-line">
             {frequentlyAsked.map(([question, answer]) => (
               <details className="group border-b border-line py-5" key={question}>
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold marker:hidden">{question}<span className="text-xl font-normal text-primary transition group-open:rotate-45" aria-hidden="true">＋</span></summary>
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 font-bold marker:hidden">{question}<span className="text-xl font-normal text-primary transition group-open:rotate-45" aria-hidden="true">＋</span></summary>
                 <p className="mb-0 max-w-170 pr-10 text-sm leading-7 text-muted">{answer}</p>
               </details>
             ))}

@@ -3,7 +3,7 @@
 @theme {
   --color-primary: #087f8c;
   --color-primary-dark: #075e68;
-  --color-primary-soft: #e7f6f6;
+  --color-primary-soft: #f0fbfb;
   --color-ink: #17313a;
   --color-muted: #63777e;
   --color-canvas: #f4f8f8;
@@ -21,7 +21,8 @@
   body { @apply min-h-screen overscroll-y-none bg-canvas text-ink antialiased; }
   button { @apply cursor-pointer; }
   h1, h2, h3 { @apply leading-[1.12] tracking-[-0.035em]; }
-  :focus-visible { outline: 3px solid rgb(8 127 140 / 0.35); outline-offset: 3px; }
+  :focus-visible { outline: 3px solid #ffbf47; outline-offset: 3px; box-shadow: 0 0 0 5px rgb(23 49 58 / 0.88); }
+  #main-content { scroll-margin-top: 5rem; }
 }
 
 @keyframes float {

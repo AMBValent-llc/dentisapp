@@ -4,7 +4,7 @@ export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-const buttonBaseClass = "inline-flex min-h-11.5 items-center justify-center rounded-xl border px-4 py-2.5 font-extrabold no-underline transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0";
+const buttonBaseClass = "inline-flex min-h-11.5 items-center justify-center rounded-xl border px-4 py-2.5 font-extrabold no-underline transition hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0";
 export const buttonClass = cn(buttonBaseClass, "border-primary bg-primary text-white shadow-[0_8px_18px_rgb(8_127_140/0.2)] hover:bg-primary-dark");
 export const secondaryButtonClass = cn(buttonBaseClass, "border-line bg-white text-ink shadow-none hover:border-primary/40 hover:bg-primary-soft hover:text-primary-dark");
 export const lightButtonClass = cn(buttonBaseClass, "border-white bg-white text-primary-dark shadow-none hover:bg-primary-soft");
