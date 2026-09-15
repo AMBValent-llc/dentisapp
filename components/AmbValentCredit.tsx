@@ -1,13 +1,20 @@
-import Image from "next/image";
+import React from "react";
 import { cn } from "./ui";
 
 export function AmbValentCredit({ dark = false }: { dark?: boolean }) {
   return (
-    <span className={cn("inline-flex min-h-10 items-center justify-end gap-2.5 whitespace-nowrap text-xs leading-tight", dark ? "text-[#cbd8db]" : "text-muted")}>
-      <span>Diseñado y desarrollado por</span>
-      <span className={cn("inline-flex shrink-0 items-center rounded-lg", dark && "bg-white px-2 py-1")}>
-        <Image className="block h-8 w-auto" src="/ambvalent-logo.svg" alt="AMBValent" width={105} height={30} />
-      </span>
+    <span className={cn("text-xs leading-relaxed", dark ? "text-[#cbd8db]" : "text-muted")}>
+      © 2026{" "}
+      <a
+        className={cn(
+          "font-bold underline decoration-current/50 underline-offset-2 transition-colors hover:decoration-current focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 motion-reduce:transition-none",
+          dark ? "text-white focus-visible:outline-white" : "text-primary-dark focus-visible:outline-primary",
+        )}
+        href="https://ambvalent.com"
+      >
+        AMBVALENT LLC
+      </a>
+      . TODOS LOS DERECHOS RESERVADOS.
     </span>
   );
 }
