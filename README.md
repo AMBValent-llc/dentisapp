@@ -47,21 +47,20 @@ La adopción verifica el esquema y el historial anterior antes de registrar el b
 
 ## Usuario demostrativo
 
-- Correo: `admin@docli.local`
-- Contraseña: `DocliDemo2026!`
-- Nombre: Andrés Torres
-- Organización: Equipo Central
+En una instalación limpia, `npm run dev:setup` provisiona la base Neon temporal junto con una cuenta demo y datos clínicos de muestra. Genera una contraseña aleatoria solo en `.env.local`, verifica que la cuenta realmente autentique y únicamente entonces habilita el botón **Completar cuenta de prueba**. El navegador recibe esas credenciales al renderizar `/login` en desarrollo, pero no se compilan variables `NEXT_PUBLIC_*` de autenticación ni se habilita el control en producción.
 
-El seed es idempotente, crea la contraseña mediante Better Auth (queda hasheada), y carga procesos, pasos, tareas, referencias documentales, pacientes, historias, consentimientos, remisiones y exámenes.
-
-Solo se permite en desarrollo/pruebas, con autorización explícita y confirmación del host de una base aislada:
+Para añadir la demo explícitamente a una rama Neon de desarrollo existente, define credenciales propias en `.env.local` y confirma el host aislado:
 
 ```bash
-NODE_ENV=test ALLOW_DEMO_SEED=true DATABASE_TARGET_HOST="host-de-la-rama.neon.tech" npm run db:seed
-NEXT_PUBLIC_ENABLE_DEMO_LOGIN=true NEXT_PUBLIC_DEMO_EMAIL="admin@docli.local" NEXT_PUBLIC_DEMO_PASSWORD="DocliDemo2026!" npm run dev
+ENABLE_DEMO_LOGIN=false
+DEMO_EMAIL="demo@example.test"
+DEMO_PASSWORD="una-clave-local-de-al-menos-12-caracteres"
+DATABASE_TARGET_HOST="host-de-la-rama.neon.tech" npm run dev:setup:demo
 ```
 
-El botón para completar esta cuenta solo aparece cuando se habilita y se proporcionan ambas credenciales públicas de demostración. No actives estas opciones en el Worker ni ejecutes el seed contra producción.
+El seed es idempotente, crea la contraseña mediante Better Auth (queda hasheada), comprueba el login y carga procesos, pasos, tareas, referencias documentales, pacientes, historias, consentimientos, remisiones y exámenes. Si la cuenta ya existe con otra contraseña, el setup falla y mantiene el botón deshabilitado en vez de prometer un acceso inválido. No actives estas opciones en el Worker ni ejecutes el seed contra producción.
+
+Las contraseñas configuradas manualmente deben tener al menos 12 caracteres y no usar comillas, acentos graves, `$`, barras invertidas ni saltos de línea, porque dotenv transforma esos caracteres al cargar el entorno. El setup rechaza esos valores antes de crear o habilitar la cuenta; las contraseñas aleatorias generadas automáticamente son seguras para dotenv.
 
 ## Despliegue en Cloudflare Workers
 
