@@ -11,8 +11,9 @@ const previewRows = [
 export default function LandingPage() {
   return <PublicShell landing>
     <main className="overflow-clip" id="main-content">
-      <section className="bg-linear-to-r from-[#075e68] via-[#08717d] to-primary">
-        <div className="mx-auto grid min-h-170 w-full max-w-330 grid-cols-[minmax(0,.86fr)_minmax(500px,1.14fr)] items-center gap-[clamp(2.5rem,7vw,7rem)] px-[clamp(1.25rem,4vw,3.5rem)] py-[clamp(4rem,8vw,7rem)] max-[880px]:grid-cols-1 max-sm:min-h-0 max-sm:pt-14">
+      <section className="relative isolate overflow-hidden bg-linear-to-r from-[#075e68] via-[#08717d] to-primary">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-32 bg-linear-to-b from-transparent to-[#f8fbfb]" aria-hidden="true" />
+        <div className="relative z-10 mx-auto grid min-h-170 w-full max-w-330 grid-cols-[minmax(0,.86fr)_minmax(500px,1.14fr)] items-center gap-[clamp(2.5rem,7vw,7rem)] px-[clamp(1.25rem,4vw,3.5rem)] py-[clamp(4rem,8vw,7rem)] max-[880px]:grid-cols-1 max-sm:min-h-0 max-sm:pt-14">
           <Reveal className="text-white">
             <span className="mb-5 inline-block rounded-full border border-white/25 bg-white/12 px-3 py-1.5 text-xs font-extrabold uppercase tracking-[.07em] text-white">● Procesos visibles de principio a fin</span>
             <h1 className="mb-5 text-[clamp(3.4rem,7vw,6.5rem)] font-bold leading-[.92] tracking-[-.07em] max-sm:text-[clamp(3.2rem,16vw,5rem)]">El trabajo fluye<br /><em className="not-italic text-[#9be5df]">cuando es claro.</em></h1>
@@ -34,7 +35,7 @@ export default function LandingPage() {
           </Reveal>
         </div>
       </section>
-      <Reveal as="section" className="bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-[clamp(4rem,8vw,7rem)]">
+      <Reveal as="section" className="bg-[#f8fbfb] px-[max(1.25rem,calc((100vw-1180px)/2))] py-[clamp(4rem,8vw,7rem)]">
         <div className="mx-auto mb-10 max-w-180 text-center"><span className="text-xs font-extrabold uppercase tracking-[.1em] text-primary">Una forma común de trabajar</span><h2 className="my-2 text-[clamp(2.2rem,4vw,3.4rem)] font-bold" id="features-title">Del acuerdo a la ejecución, sin vacíos</h2><p className="text-muted">Cada persona sabe qué sigue, qué necesita y cómo se mide el resultado.</p></div>
         <div className="grid grid-cols-3 gap-4 max-[880px]:mx-auto max-[880px]:max-w-155 max-[880px]:grid-cols-1">
           {[["◎","Procesos repetibles","Define pasos, responsables y criterios para ejecutar siempre con el mismo estándar."],["✓","Trabajo coordinado","Ordena pendientes, fechas y bloqueos sin perder contexto entre canales."],["↗","Decisiones con evidencia","Consulta avances, tiempos y carga del equipo antes de ajustar la operación."]].map((feature, index) => <Reveal as="article" className="rounded-[18px] border border-line bg-[#fbfdfd] p-6 transition-[opacity,transform,box-shadow,border-color] hover:-translate-y-1 hover:border-primary/35 hover:shadow-soft" delay={index * 90} key={feature[1]}><span className="grid size-10 place-items-center rounded-xl bg-primary-soft text-primary">{feature[0]}</span><h3 className="mb-2 mt-4 text-lg font-bold">{feature[1]}</h3><p className="text-muted">{feature[2]}</p></Reveal>)}
