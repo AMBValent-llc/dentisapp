@@ -194,10 +194,13 @@ export function RegistrationForm({ selectedPlan, existingSession = false }: { se
               Confirmar contraseña
               <input className={fieldClass} id="confirmation" type="password" autoComplete="new-password" placeholder="Repite tu contraseña" value={data.confirmation} onChange={(event) => update("confirmation", event.target.value)} />
             </label>
-            <label className="flex items-start gap-3 text-sm text-muted">
-              <input className="mt-1 size-4 accent-primary" type="checkbox" checked={data.terms} onChange={(event) => update("terms", event.target.checked)} />
-              <span>Acepto los términos de uso y el tratamiento de datos de Docli.</span>
-            </label>
+            <div className="flex items-start gap-3 text-sm text-muted">
+              <input aria-describedby="legal-documents" className="mt-1 size-4 accent-primary" id="legal-acceptance" type="checkbox" checked={data.terms} onChange={(event) => update("terms", event.target.checked)} />
+              <div>
+                <label className="font-medium text-ink" htmlFor="legal-acceptance">Acepto los documentos legales de Docli.</label>{" "}
+                <span id="legal-documents">Consulta los <Link aria-label="Términos, abre en una pestaña nueva" className="font-semibold text-primary-dark" href="/terminos" rel="noopener noreferrer" target="_blank">Términos</Link> y la <Link aria-label="Política de privacidad, abre en una pestaña nueva" className="font-semibold text-primary-dark" href="/privacidad" rel="noopener noreferrer" target="_blank">Política de privacidad</Link>.</span>
+              </div>
+            </div>
             {error && <p className="m-0 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-danger" role="alert">{error}</p>}
             <div className="grid grid-cols-[auto_1fr] gap-2 max-sm:grid-cols-1">
               <button className={secondaryButtonClass} type="button" onClick={() => { setStep(1); setError(""); }}>Atrás</button>
