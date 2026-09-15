@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ButtonLink, PageHeading, cardClass, fieldClass } from "@/components/ui";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { containsPattern } from "@/lib/db/search";
 import { requirePageContext } from "@/lib/server-auth";
 
 export const metadata: Metadata = { title: "Procesos" };
@@ -9,7 +10,14 @@ export default async function ProcessesPage({ searchParams }: { searchParams: Pr
   const { organization } = await requirePageContext();
   const { q = "", estado = "" } = await searchParams;
   const statusMap: Record<string, "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "ARCHIVED"> = { Borrador: "DRAFT", "En curso": "ACTIVE", Pausado: "PAUSED", Completado: "COMPLETED", Archivado: "ARCHIVED" };
-  const visible = await prisma.process.findMany({ where: { organizationId: organization.id, ...(q.trim() ? { OR: [{ name: { contains: q.trim(), mode: "insensitive" } }, { ownerName: { contains: q.trim(), mode: "insensitive" } }] } : {}), ...(estado && statusMap[estado] ? { status: statusMap[estado] } : {}) }, orderBy: { updatedAt: "desc" } });
+  const visible = await db.query.processes.findMany({
+    where: (processes, { and, eq, ilike, or }) => and(
+      eq(processes.organizationId, organization.id),
+      q.trim() ? or(ilike(processes.name, containsPattern(q.trim())), ilike(processes.ownerName, containsPattern(q.trim()))) : undefined,
+      estado && statusMap[estado] ? eq(processes.status, statusMap[estado]) : undefined,
+    ),
+    orderBy: (processes, { desc }) => [desc(processes.updatedAt)],
+  });
   return <><PageHeading eyebrow="Operaciones" title="Procesos" description="Estándares de trabajo, responsables y avance en un solo lugar." action={<ButtonLink href="/procesos/nuevo">＋ Nuevo proceso</ButtonLink>} />
     <section className={`${cardClass} overflow-hidden p-4`}><form className="mb-4 grid grid-cols-[1fr_190px_auto] gap-3 max-sm:grid-cols-1" method="get"><label className="sr-only" htmlFor="process-search">Buscar procesos</label><input className={fieldClass} id="process-search" name="q" type="search" defaultValue={q} placeholder="Buscar por nombre o responsable…" /><label className="sr-only" htmlFor="process-filter">Filtrar por estado</label><select className={fieldClass} id="process-filter" name="estado" defaultValue={estado}><option value="">Todos los estados</option><option>En curso</option><option>Pausado</option><option>Completado</option><option>Borrador</option><option>Archivado</option></select><button className="rounded-xl bg-primary px-4 font-bold text-white" type="submit">Aplicar</button></form>{(q || estado) && <p className="rounded-xl bg-primary-soft px-3 py-2 text-sm text-primary-dark" role="status">{visible.length} proceso{visible.length === 1 ? "" : "s"} encontrado{visible.length === 1 ? "" : "s"}.</p>}<div className="overflow-x-auto"><table className="w-full min-w-190 border-collapse"><thead><tr>{["Proceso","Área","Responsable","Avance","Estado","Acción"].map((heading) => <th className="border-b border-line bg-[#f6f9f9] p-3 text-left text-xs uppercase text-muted" key={heading}>{heading}</th>)}</tr></thead><tbody>{visible.map((process) => <tr key={process.id}><td className="border-b border-line p-3 font-bold">{process.name}</td><td className="border-b border-line p-3 text-sm text-muted">{process.area ?? "—"}</td><td className="border-b border-line p-3">{process.ownerName ?? "Sin asignar"}</td><td className="border-b border-line p-3"><div className="h-2 w-24 rounded-full bg-[#e6eeee]"><span className="block h-full rounded-full bg-primary" style={{ width: `${process.progress}%` }} /></div><small className="text-muted">{process.progress}%</small></td><td className="border-b border-line p-3"><span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary-dark">{process.status}</span></td><td className="border-b border-line p-3"><Link className="font-bold text-primary" href={`/tareas?q=${encodeURIComponent(process.name)}`}>Ver tareas →</Link></td></tr>)}</tbody></table>{!visible.length && <p className="p-8 text-center text-muted">No hay procesos que coincidan con esos filtros.</p>}</div></section>
   </>;

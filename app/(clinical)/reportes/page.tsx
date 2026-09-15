@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
 import { PageHeading, cardClass } from "@/components/ui";
 import { requirePageContext } from "@/lib/server-auth";
-import { prisma } from "@/lib/prisma";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { clinicalHistories, patients as patientTable } from "@/lib/db/schema";
 
 export const metadata: Metadata = { title: "Reportes" };
 export default async function ReportsPage() {
   const { organization } = await requirePageContext();
   const [tasks, processes, patients, histories] = await Promise.all([
-    prisma.task.findMany({ where: { organizationId: organization.id }, select: { status: true, dueDate: true } }),
-    prisma.process.findMany({ where: { organizationId: organization.id }, select: { name: true, progress: true } }),
-    prisma.patient.count({ where: { organizationId: organization.id } }),
-    prisma.clinicalHistory.count({ where: { organizationId: organization.id } }),
+    db.query.tasks.findMany({
+      where: (tasks, { eq }) => eq(tasks.organizationId, organization.id),
+      columns: { status: true, dueDate: true },
+    }),
+    db.query.processes.findMany({
+      where: (processes, { eq }) => eq(processes.organizationId, organization.id),
+      columns: { name: true, progress: true },
+    }),
+    db.$count(patientTable, eq(patientTable.organizationId, organization.id)),
+    db.$count(clinicalHistories, eq(clinicalHistories.organizationId, organization.id)),
   ]);
   const completed = tasks.filter((task) => task.status === "DONE").length;
   const completion = tasks.length ? Math.round(completed / tasks.length * 100) : 0;

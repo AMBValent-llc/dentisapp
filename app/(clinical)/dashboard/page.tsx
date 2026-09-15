@@ -2,16 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ButtonLink, PageHeading, cardClass } from "@/components/ui";
 import { requirePageContext } from "@/lib/server-auth";
-import { prisma } from "@/lib/prisma";
+import { and, eq, ne } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { documents as documentTable, patients as patientTable, tasks } from "@/lib/db/schema";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export default async function DashboardPage() {
   const { session, organization } = await requirePageContext();
   const [processes, openTasks, patients, documents] = await Promise.all([
-    prisma.process.findMany({ where: { organizationId: organization.id }, orderBy: { updatedAt: "desc" }, take: 6 }),
-    prisma.task.count({ where: { organizationId: organization.id, status: { not: "DONE" } } }),
-    prisma.patient.count({ where: { organizationId: organization.id } }),
-    prisma.document.count({ where: { organizationId: organization.id } }),
+    db.query.processes.findMany({
+      where: (processes, { eq }) => eq(processes.organizationId, organization.id),
+      orderBy: (processes, { desc }) => [desc(processes.updatedAt)],
+      limit: 6,
+    }),
+    db.$count(tasks, and(eq(tasks.organizationId, organization.id), ne(tasks.status, "DONE"))),
+    db.$count(patientTable, eq(patientTable.organizationId, organization.id)),
+    db.$count(documentTable, eq(documentTable.organizationId, organization.id)),
   ]);
   return <><PageHeading eyebrow="Resumen operativo" title={`Hola, ${session.user.name.split(" ")[0]}`} description="Datos actuales de tu espacio de trabajo." action={<ButtonLink href="/procesos/nuevo">＋ Nuevo proceso</ButtonLink>} />
     <section className="mb-5 grid grid-cols-4 gap-4 max-[1050px]:grid-cols-2 max-sm:grid-cols-1">{[[processes.filter((p) => p.status === "ACTIVE").length, "Procesos activos"], [openTasks, "Tareas abiertas"], [patients, "Pacientes"], [documents, "Documentos"]].map(([value, label]) => <article className={`${cardClass} p-5`} key={label}><p className="m-0 text-sm text-muted">{label}</p><strong className="my-1 block text-3xl">{value}</strong></article>)}</section>

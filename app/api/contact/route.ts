@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { contactSubmissions } from "@/lib/db/schema";
 import { apiError, handleApiError } from "@/lib/api";
 
 const schema = z.object({ name: z.string().trim().min(2).max(120), email: z.string().email().max(200), company: z.string().trim().max(160).optional(), message: z.string().trim().min(10).max(5000) });
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
     if (recent.length >= LIMIT) return apiError("Demasiadas solicitudes. Inténtalo más tarde.", 429);
     const data = schema.parse(await request.json());
     attempts.set(ip, [...recent, now]);
-    await prisma.contactSubmission.create({ data: { ...data, ipHash: createHash("sha256").update(ip).digest("hex") } });
+    await db.insert(contactSubmissions).values({ id: crypto.randomUUID(), ...data, ipHash: createHash("sha256").update(ip).digest("hex") });
     return Response.json({ message: "Solicitud recibida" }, { status: 201 });
   } catch (error) { return handleApiError(error); }
 }

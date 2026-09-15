@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { and, asc, desc, eq, getTableName, ilike, or, sql } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { processes, processSteps } from "@/lib/db/schema";
 import { requireApiContext } from "@/lib/server-auth";
 import { apiError, handleApiError, parseDate } from "@/lib/api";
 
@@ -16,18 +18,25 @@ const schema = z.object({
 });
 
 export async function GET(request: Request) {
-  const context = await requireApiContext();
-  if (!context) return apiError("No autorizado", 401);
-  const query = new URL(request.url).searchParams.get("q")?.trim();
-  const processes = await prisma.process.findMany({
-    where: {
-      organizationId: context.organization.id,
-      ...(query ? { OR: [{ name: { contains: query, mode: "insensitive" } }, { description: { contains: query, mode: "insensitive" } }] } : {}),
-    },
-    include: { steps: { orderBy: { position: "asc" } }, _count: { select: { tasks: true, documents: true } } },
-    orderBy: { updatedAt: "desc" },
-  });
-  return Response.json({ processes });
+  try {
+    const context = await requireApiContext();
+    if (!context) return apiError("No autorizado", 401);
+    const query = new URL(request.url).searchParams.get("q")?.trim();
+    const pattern = query ? `%${query.replace(/[\\%_]/g, "\\$&")}%` : undefined;
+    const rows = await db.query.processes.findMany({
+      where: and(eq(processes.organizationId, context.organization.id), pattern ? or(ilike(processes.name, pattern), ilike(processes.description, pattern)) : undefined),
+      with: { steps: { orderBy: asc(processSteps.position) } },
+      extras: (table) => {
+        const processId = sql`${sql.identifier(getTableName(table.id.table))}.${sql.identifier(table.id.name)}`;
+        return {
+          taskCount: sql<number>`(select count(*)::int from "Task" where "Task"."processId" = ${processId})`.as("task_count"),
+          documentCount: sql<number>`(select count(*)::int from "Document" where "Document"."processId" = ${processId})`.as("document_count"),
+        };
+      },
+      orderBy: desc(processes.updatedAt),
+    });
+    return Response.json({ processes: rows.map(({ taskCount, documentCount, ...process }) => ({ ...process, _count: { tasks: taskCount, documents: documentCount } })) });
+  } catch (error) { return handleApiError(error); }
 }
 
 export async function POST(request: Request) {
@@ -36,15 +45,18 @@ export async function POST(request: Request) {
     if (!context) return apiError("No autorizado", 401);
     const data = schema.parse(await request.json());
     const { steps, dueDate, ...fields } = data;
-    const process = await prisma.process.create({
-      data: {
-        ...fields,
-        dueDate: parseDate(dueDate),
-        organizationId: context.organization.id,
-        steps: steps ? { create: steps.map((title, position) => ({ title, position })) } : undefined,
-      },
-      include: { steps: { orderBy: { position: "asc" } } },
-    });
-    return Response.json({ process }, { status: 201 });
+    const id = crypto.randomUUID();
+    const insertProcess = db.insert(processes).values({ ...fields, id, dueDate: parseDate(dueDate), organizationId: context.organization.id }).returning();
+    if (steps?.length) {
+      const [[process], createdSteps] = await db.batch([
+        insertProcess,
+        db.insert(processSteps).values(steps.map((title, position) => ({ id: crypto.randomUUID(), processId: id, title, position }))).returning(),
+      ]);
+      if (!process) throw new Error("Process creation returned no row");
+      return Response.json({ process: { ...process, steps: createdSteps.sort((a, b) => a.position - b.position) } }, { status: 201 });
+    }
+    const [process] = await insertProcess;
+    if (!process) throw new Error("Process creation returned no row");
+    return Response.json({ process: { ...process, steps: [] } }, { status: 201 });
   } catch (error) { return handleApiError(error); }
 }

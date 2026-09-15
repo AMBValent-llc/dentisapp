@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { and, asc, desc, eq, ilike } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { memberships, processes, tasks } from "@/lib/db/schema";
 import { requireApiContext } from "@/lib/server-auth";
 import { apiError, handleApiError, parseDate } from "@/lib/api";
 
@@ -15,15 +17,17 @@ const schema = z.object({
 });
 
 export async function GET(request: Request) {
+  try {
   const context = await requireApiContext();
   if (!context) return apiError("No autorizado", 401);
   const q = new URL(request.url).searchParams.get("q")?.trim();
-  const tasks = await prisma.task.findMany({
-    where: { organizationId: context.organization.id, ...(q ? { title: { contains: q, mode: "insensitive" } } : {}) },
-    include: { process: { select: { id: true, name: true } }, assignee: { select: { id: true, name: true } } },
-    orderBy: [{ status: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }],
+  const rows = await db.query.tasks.findMany({
+    where: and(eq(tasks.organizationId, context.organization.id), q ? ilike(tasks.title, `%${q.replace(/[\\%_]/g, "\\$&")}%`) : undefined),
+    with: { process: { columns: { id: true, name: true } }, assignee: { columns: { id: true, name: true } } },
+    orderBy: [asc(tasks.status), asc(tasks.dueDate), desc(tasks.createdAt)],
   });
-  return Response.json({ tasks });
+  return Response.json({ tasks: rows });
+  } catch (error) { return handleApiError(error); }
 }
 
 export async function POST(request: Request) {
@@ -31,9 +35,10 @@ export async function POST(request: Request) {
     const context = await requireApiContext();
     if (!context) return apiError("No autorizado", 401);
     const data = schema.parse(await request.json());
-    if (data.processId && !await prisma.process.findFirst({ where: { id: data.processId, organizationId: context.organization.id } })) return apiError("Proceso no válido", 422);
-    if (data.assigneeId && !await prisma.membership.findUnique({ where: { userId_organizationId: { userId: data.assigneeId, organizationId: context.organization.id } } })) return apiError("Responsable no pertenece al equipo", 422);
-    const task = await prisma.task.create({ data: { ...data, dueDate: parseDate(data.dueDate), organizationId: context.organization.id, createdById: context.session.user.id } });
+    if (data.processId && !await db.query.processes.findFirst({ where: and(eq(processes.id, data.processId), eq(processes.organizationId, context.organization.id)) })) return apiError("Proceso no válido", 422);
+    if (data.assigneeId && !await db.query.memberships.findFirst({ where: and(eq(memberships.userId, data.assigneeId), eq(memberships.organizationId, context.organization.id)) })) return apiError("Responsable no pertenece al equipo", 422);
+    const [task] = await db.insert(tasks).values({ ...data, id: crypto.randomUUID(), dueDate: parseDate(data.dueDate), organizationId: context.organization.id, createdById: context.session.user.id }).returning();
+    if (!task) throw new Error("Task creation returned no row");
     return Response.json({ task }, { status: 201 });
   } catch (error) { return handleApiError(error); }
 }

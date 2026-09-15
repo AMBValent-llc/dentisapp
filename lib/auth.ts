@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth/minimal";
-import { prismaAdapter } from "@better-auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { getDb } from "@/lib/db";
+import { accounts, sessions, users, verifications } from "@/lib/db/schema";
 
 function createAuth() {
   const baseURL = process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL;
@@ -9,7 +10,11 @@ function createAuth() {
     appName: "Docli",
     baseURL,
     secret: process.env.BETTER_AUTH_SECRET,
-    database: prismaAdapter(prisma, { provider: "postgresql" }),
+    database: drizzleAdapter(getDb(), {
+      provider: "pg",
+      schema: { user: users, session: sessions, account: accounts, verification: verifications },
+      transaction: false,
+    }),
     emailAndPassword: { enabled: true, minPasswordLength: 8 },
     advanced: { ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] } },
     trustedOrigins: baseURL ? [new URL(baseURL).origin] : [],

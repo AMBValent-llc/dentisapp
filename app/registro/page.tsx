@@ -3,7 +3,7 @@ import { PublicShell } from "@/components/PublicShell";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { getSession } from "@/lib/server-auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Crear cuenta",
@@ -12,7 +12,9 @@ export const metadata: Metadata = {
 
 export default async function RegistrationPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   const session = await getSession();
-  if (session && await prisma.membership.findFirst({ where: { userId: session.user.id } })) redirect("/dashboard");
+  if (session && await db.query.memberships.findFirst({
+    where: (memberships, { eq }) => eq(memberships.userId, session.user.id),
+  })) redirect("/dashboard");
   const { plan } = await searchParams;
   const selectedPlan = ["inicial", "equipo", "organizacion"].includes(plan ?? "") ? plan : undefined;
   return (

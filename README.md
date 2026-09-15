@@ -1,32 +1,41 @@
 # Docli
 
-Docli es una aplicación Next.js 15 / React 19 para procesos operativos y gestión clínica. Usa PostgreSQL mediante Prisma 7 y sesiones reales de Better Auth.
+Docli es una aplicación Next.js 15 / React 19 para procesos operativos y gestión clínica. Usa PostgreSQL en Neon mediante Drizzle y sesiones reales de Better Auth.
 
 ## Arquitectura
 
 - **UI:** App Router, Server Components, Tailwind CSS 4.
-- **Datos:** PostgreSQL, Prisma Client generado en `generated/prisma`.
-- **Auth:** Better Auth (correo/contraseña) con adaptador Prisma y cookies HTTP.
+- **Datos:** Neon PostgreSQL, esquema Drizzle en `lib/db/schema.ts` y consultas HTTP sin conexiones persistentes ni compilador WASM.
+- **Auth:** Better Auth (correo/contraseña) con adaptador Drizzle y cookies HTTP.
 - **Aislamiento:** todo dato de dominio tiene `organizationId`; los handlers lo obtienen de la membresía de la sesión, nunca del cliente.
 - **Autorización:** membresías `OWNER`, `ADMIN`, `MEMBER`; eliminaciones sensibles requieren administración.
 
 ## Configuración
 
-Requiere Node.js 22. Copia `.env.example` a `.env`, genera `BETTER_AUTH_SECRET` con al menos 32 bytes aleatorios y configura las dos bases. `.env*` está ignorado salvo el ejemplo.
+Requiere Node.js 22. Copia `.env.example` a `.env`, genera `BETTER_AUTH_SECRET` con al menos 32 bytes aleatorios y configura `DATABASE_URL` con una rama de desarrollo de Neon. `.env*` está ignorado salvo el ejemplo. No se necesita base shadow ni generación de un cliente ORM.
 
-Para una base local oficial de Prisma:
+Para una base nueva de desarrollo:
 
 ```bash
-npm install
-npm run db:dev
-# copia DATABASE_URL y la URL shadow que informa Prisma Dev a .env
-npm run db:generate
-npm run db:migrate -- --name init
-npm run db:seed
+npm ci
+# DATABASE_TARGET_HOST debe coincidir exactamente con el host de DATABASE_URL.
+ALLOW_DATABASE_MIGRATIONS=true DATABASE_TARGET_HOST="host-de-tu-rama.neon.tech" npm run db:deploy
 npm run dev
 ```
 
-En producción usa PostgreSQL administrado y ejecuta `npm run db:deploy`. La base shadow solo se necesita para generar migraciones con `prisma migrate dev`, no para aplicar las existentes en producción.
+`npm run db:status` inspecciona el estado sin escribir. Después de cambiar el esquema, `npm run db:generate` genera migraciones SQL; revísalas antes de aplicarlas con `db:deploy`. El driver HTTP requiere Neon, no una instancia PostgreSQL local conectada directamente por TCP.
+
+### Adoptar una base existente de Prisma
+
+La migración inicial conserva las tablas, columnas, enumeraciones, índices y relaciones existentes. No ejecutes de nuevo sus sentencias `CREATE TABLE` contra una base que ya las tiene. Prueba primero la adopción en una rama aislada:
+
+```bash
+npm run db:status
+ALLOW_DATABASE_MIGRATIONS=true DATABASE_TARGET_HOST="host-de-la-rama.neon.tech" npm run db:adopt
+npm run db:status
+```
+
+La adopción verifica el esquema y el historial anterior antes de registrar el baseline de Drizzle; conserva `_prisma_migrations` y los datos. Una base incompatible debe rechazarse, no marcarse como migrada a ciegas. Consulta también `drizzle/` para el historial SQL. El SQL inicial de `prisma/migrations/` se conserva únicamente como referencia histórica; el esquema activo y las herramientas de migración ya son de Drizzle.
 
 ## Usuario demostrativo
 
@@ -37,6 +46,14 @@ En producción usa PostgreSQL administrado y ejecuta `npm run db:deploy`. La bas
 
 El seed es idempotente, crea la contraseña mediante Better Auth (queda hasheada), y carga procesos, pasos, tareas, referencias documentales, pacientes, historias, consentimientos, remisiones y exámenes.
 
+Solo se permite en desarrollo/pruebas, con autorización explícita y confirmación del host de una base aislada:
+
+```bash
+NODE_ENV=test ALLOW_DEMO_SEED=true DATABASE_TARGET_HOST="host-de-la-rama.neon.tech" npm run db:seed
+```
+
+No actives estas opciones en el Worker ni ejecutes el seed contra producción.
+
 ## Despliegue en Cloudflare Workers
 
 Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better Auth y PostgreSQL. El Worker `mediflow` sirve tanto la UI como el backend `/api/*`; PostgreSQL vive fuera del Worker. No debe desplegarse como sitio estático de Cloudflare Pages.
@@ -45,7 +62,7 @@ Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better
 
    | Variable | Build | Runtime |
    | --- | --- | --- |
-   | `DATABASE_URL` | Secreto PostgreSQL | Secreto PostgreSQL, con pool de conexiones |
+   | `DATABASE_URL` | No necesario para las rutas dinámicas | Secreto de conexión Neon PostgreSQL |
    | `BETTER_AUTH_SECRET` | No necesario | Secreto de alta entropía |
    | `BETTER_AUTH_URL` | No necesario | Origen HTTPS de producción |
    | `NEXT_PUBLIC_APP_URL` | Opcional; si se define, debe coincidir con producción | El mismo origen HTTPS |
@@ -53,7 +70,7 @@ Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better
    Genera `BETTER_AUTH_SECRET` con `openssl rand -base64 32`; no lo guardes en Git. El origen actual es `https://mediflow.accounts-865.workers.dev`, también declarado en `wrangler.jsonc`. Si cambias de dominio, actualiza el archivo y cualquier variable de Build que hayas definido antes de recompilar. El cliente de autenticación usa el mismo origen que la página, sin apuntar a localhost en producción. Better Auth se inicializa al atender una petición, no al importar módulos durante el build; no es necesario entregar su secreto de runtime al compilador.
 2. Ejecuta las migraciones desde un entorno confiable antes de publicar:
    ```bash
-   DATABASE_URL="..." npm run db:deploy
+   ALLOW_DATABASE_MIGRATIONS=true DATABASE_TARGET_HOST="host-verificado.neon.tech" npm run db:deploy
    ```
    No ejecutes el seed demostrativo contra una base de producción con datos reales.
 3. Verifica localmente el artefacto en el runtime de Workers:
@@ -67,7 +84,9 @@ Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better
 
 Para Cloudflare Workers Builds usa la raíz del repositorio, `npm run cf:build` como comando de build y `npx opennextjs-cloudflare deploy` como comando de deploy. En ramas de vista previa usa `npx opennextjs-cloudflare upload` después del build, con una base y secretos separados de producción. `.open-next/worker.js` y los demás artefactos no se versionan. No hay un `build.command` en Wrangler: se compila una sola vez, explícitamente, antes del deploy.
 
-Prisma genera dos clientes: `generated/prisma` para Node.js y `generated/prisma-cloudflare` para Workers. `cf:build` establece `PRISMA_CLIENT_RUNTIME=cloudflare` y Next.js selecciona el segundo mediante un reemplazo de módulo de Webpack, también después de resolver los paths de TypeScript; así el compilador WebAssembly se importa como módulo, sin compilar WASM dinámicamente dentro del Worker. El desarrollo y el seed conservan el cliente Node.js. Usa los scripts `cf:*` para Workers; un cliente Node.js puede compilar correctamente y aun así fallar al consultar la base con `Wasm code generation disallowed by embedder`.
+Node.js y Workers usan el mismo driver Neon HTTP y el mismo esquema Drizzle. La conexión y Better Auth se inicializan de forma diferida; importar sus módulos durante el build no necesita secretos. No se generan clientes Prisma ni se aplican reemplazos Webpack para WASM.
+
+Las operaciones de dominio con varias escrituras (workspace y membresía, proceso y pasos, perfil) usan `db.batch`, que es atómico. No uses callbacks de `db.transaction` con Neon HTTP. El adaptador de Better Auth mantiene las transacciones interactivas desactivadas; no habilites `transaction: true` sin cambiar a un driver compatible.
 
 Después de publicar, verifica `/login` (200), `/api/auth/get-session` sin cookies (200 con `null`) y `/api/patients` sin cookies (401). Una portada que responde 200 no demuestra que la autenticación o PostgreSQL funcionen. Comprueba también un login real y una lectura autenticada; ante errores 500 revisa los logs del Worker y sus secretos de runtime.
 
@@ -80,10 +99,19 @@ Auth: `/api/auth/*`. Espacio/perfil: `/api/workspaces`, `/api/profile`. CRUD pro
 ```bash
 npm run lint
 npx tsc --noEmit
-npx prisma validate
+npm test
 npm run db:status
-npm run test:api
+# Solo contra una rama Neon aislada, nunca producción:
+ALLOW_DATABASE_TESTS=1 TEST_DATABASE_HOST="host-de-la-rama.neon.tech" npm run test:db
+# Servidor local configurado con esa misma rama:
+ALLOW_API_TESTS=1 ALLOW_DATABASE_TESTS=1 TEST_DATABASE_HOST="host-de-la-rama.neon.tech" NEXT_PUBLIC_APP_URL="http://localhost:3000" npm run test:api:isolated
+ALLOW_API_TESTS=1 ALLOW_DATABASE_TESTS=1 TEST_DATABASE_HOST="host-de-la-rama.neon.tech" NEXT_PUBLIC_APP_URL="http://localhost:3000" npm run test:roles
+npm run cf:build
 ```
+
+`test:db` compara columnas, valores por defecto, enumeraciones, claves e índices con PostgreSQL y verifica el rollback de una escritura atómica fallida. Una compilación o una portada 200 no sustituyen las pruebas de autenticación y CRUD contra la base.
+
+`test:api:isolated` crea una membresía `MEMBER` sintética y ejecuta la suite HTTP completa sin imprimir sus credenciales. El servidor local debe usar la misma rama Neon. Los usuarios y workspaces sintéticos permanecen en esa rama; elimínala al terminar. Para usar `test:api` directamente, configura `API_TEST_MEMBER_EMAIL` y `API_TEST_MEMBER_PASSWORD` de un fixture aislado existente en tu entorno privado, nunca en los bindings del Worker.
 
 ## Limitaciones
 
