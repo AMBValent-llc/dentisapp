@@ -26,7 +26,7 @@ npm run db:seed
 npm run dev
 ```
 
-En producción usa PostgreSQL administrado, una base shadow separada para migraciones y ejecuta `prisma migrate deploy`.
+En producción usa PostgreSQL administrado y ejecuta `npm run db:deploy`. La base shadow solo se necesita para generar migraciones con `prisma migrate dev`, no para aplicar las existentes en producción.
 
 ## Usuario demostrativo
 
@@ -39,17 +39,23 @@ El seed es idempotente, crea la contraseña mediante Better Auth (queda hasheada
 
 ## Despliegue en Cloudflare Workers
 
-Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better Auth y PostgreSQL. No debe desplegarse como sitio estático de Cloudflare Pages.
+Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better Auth y PostgreSQL. El Worker `mediflow` sirve tanto la UI como el backend `/api/*`; PostgreSQL vive fuera del Worker. No debe desplegarse como sitio estático de Cloudflare Pages.
 
-1. Configura en Cloudflare una URL PostgreSQL con pool de conexiones y las variables de producción:
-   - `DATABASE_URL` como secreto del Worker.
-   - `BETTER_AUTH_SECRET` como secreto de al menos 32 caracteres aleatorios.
-   - `BETTER_AUTH_URL` con el origen HTTPS final.
-   - `NEXT_PUBLIC_APP_URL` con el mismo origen HTTPS, disponible durante el build.
+1. Configura las variables en **dos lugares distintos** del dashboard: **Settings → Variables and Secrets** para el runtime y **Settings → Build → Variables and secrets** para la compilación. Las variables de Build no se transfieren automáticamente al Worker.
+
+   | Variable | Build | Runtime |
+   | --- | --- | --- |
+   | `DATABASE_URL` | Secreto PostgreSQL | Secreto PostgreSQL, con pool de conexiones |
+   | `BETTER_AUTH_SECRET` | No necesario | Secreto de alta entropía |
+   | `BETTER_AUTH_URL` | No necesario | Origen HTTPS de producción |
+   | `NEXT_PUBLIC_APP_URL` | Opcional; si se define, debe coincidir con producción | El mismo origen HTTPS |
+
+   Genera `BETTER_AUTH_SECRET` con `openssl rand -base64 32`; no lo guardes en Git. El origen actual es `https://mediflow.accounts-865.workers.dev`, también declarado en `wrangler.jsonc`. Si cambias de dominio, actualiza el archivo y cualquier variable de Build que hayas definido antes de recompilar. El cliente de autenticación usa el mismo origen que la página, sin apuntar a localhost en producción. Better Auth se inicializa al atender una petición, no al importar módulos durante el build; no es necesario entregar su secreto de runtime al compilador.
 2. Ejecuta las migraciones desde un entorno confiable antes de publicar:
    ```bash
-   DATABASE_URL="..." npm exec -- prisma migrate deploy
+   DATABASE_URL="..." npm run db:deploy
    ```
+   No ejecutes el seed demostrativo contra una base de producción con datos reales.
 3. Verifica localmente el artefacto en el runtime de Workers:
    ```bash
    npm run cf:preview
@@ -59,7 +65,9 @@ Docli usa OpenNext porque requiere renderizado dinámico, Route Handlers, Better
    npm run cf:deploy
    ```
 
-Para Cloudflare Workers Builds usa `npm run cf:build` como comando de build y `npx wrangler deploy` como comando de deploy. `wrangler.jsonc` también ejecuta el build automáticamente antes de desplegar, por lo que el Worker generado en `.open-next/worker.js` no necesita versionarse.
+Para Cloudflare Workers Builds usa la raíz del repositorio, `npm run cf:build` como comando de build y `npx opennextjs-cloudflare deploy` como comando de deploy. En ramas de vista previa usa `npx opennextjs-cloudflare upload` después del build, con una base y secretos separados de producción. `.open-next/worker.js` y los demás artefactos no se versionan. No hay un `build.command` en Wrangler: se compila una sola vez, explícitamente, antes del deploy.
+
+Después de publicar, verifica `/login` (200), `/api/auth/get-session` sin cookies (200 con `null`) y `/api/patients` sin cookies (401). Una portada que responde 200 no demuestra que la autenticación o PostgreSQL funcionen. Comprueba también un login real y una lectura autenticada; ante errores 500 revisa los logs del Worker y sus secretos de runtime.
 
 ## API
 

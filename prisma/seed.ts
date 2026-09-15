@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { auth } from "../lib/auth";
+import { getAuth } from "../lib/auth";
 import { prisma } from "../lib/prisma";
 
 const email = "admin@docli.local";
@@ -8,7 +8,7 @@ const password = "DocliDemo2026!";
 async function main() {
   let user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    await auth.api.signUpEmail({ body: { name: "Andrés Torres", email, password } });
+    await getAuth().api.signUpEmail({ body: { name: "Andrés Torres", email, password } });
     user = await prisma.user.findUniqueOrThrow({ where: { email } });
   }
   user = await prisma.user.update({ where: { id: user.id }, data: { name: "Andrés Torres" } });

@@ -1,11 +1,12 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { MembershipRole } from "@/generated/prisma/client";
 
 export async function getSession() {
-  return auth.api.getSession({ headers: await headers() });
+  const requestHeaders = await headers();
+  return getAuth().api.getSession({ headers: requestHeaders });
 }
 
 export async function requirePageContext() {
