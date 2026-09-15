@@ -4,9 +4,13 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-14",
   "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
   "vars": {
+    "APP_ENV": "production",
     "BETTER_AUTH_URL": "https://mediflow.accounts-865.workers.dev",
-    "NEXT_PUBLIC_APP_URL": "https://mediflow.accounts-865.workers.dev"
+    "NEXT_PUBLIC_APP_URL": "https://mediflow.accounts-865.workers.dev",
+    "PRODUCTION_HOSTNAME": "mediflow.accounts-865.workers.dev"
   },
   "assets": {
     "binding": "ASSETS",
@@ -14,5 +18,18 @@
   },
   "observability": {
     "enabled": true
+  },
+  "env": {
+    "staging": {
+      "name": "mediflow-demo",
+      "vars": {
+        "APP_ENV": "staging",
+        "BETTER_AUTH_URL": "https://mediflow-demo.accounts-865.workers.dev",
+        "NEXT_PUBLIC_APP_URL": "https://mediflow-demo.accounts-865.workers.dev",
+        "DEMO_ALLOWED_ORIGIN": "https://mediflow-demo.accounts-865.workers.dev",
+        "DEMO_ALLOWED_HOSTNAME": "mediflow-demo.accounts-865.workers.dev",
+        "PRODUCTION_HOSTNAME": "mediflow.accounts-865.workers.dev"
+      }
+    }
   }
 }
