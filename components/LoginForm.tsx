@@ -4,9 +4,13 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { getSpanishError } from "@/lib/client-errors";
+import { getLoginError } from "@/lib/client-errors";
 import { FeedbackBanner, FeedbackDialog } from "./Feedback";
 import { buttonClass, fieldClass, labelClass } from "./ui";
+
+const demoEmail = process.env.NEXT_PUBLIC_DEMO_EMAIL;
+const demoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD;
+const demoLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" && demoEmail && demoPassword;
 
 export function LoginForm() {
   const [role, setRole] = useState<"Administración" | "Colaborador">("Administración");
@@ -33,7 +37,7 @@ export function LoginForm() {
         password,
       });
       if (result.error) {
-        setError(getSpanishError(result.error.message, "No fue posible iniciar sesión. Verifica tus datos e inténtalo nuevamente."));
+        setError(getLoginError(result.error));
         return;
       }
       router.replace("/dashboard");
@@ -49,9 +53,9 @@ export function LoginForm() {
       {(["Administración", "Colaborador"] as const).map((tab) => <button key={tab} aria-pressed={role === tab} className={`min-h-11 rounded-lg p-3 font-bold text-muted ${role === tab ? "bg-white text-primary-dark shadow-soft" : ""}`} type="button" onClick={() => setRole(tab)}>{tab}</button>)}
     </div>
     <form className="grid gap-2" onSubmit={submit}>
-      <button className="mb-2 min-h-11 rounded-xl border border-primary/20 bg-primary-soft px-3 text-sm font-extrabold text-primary-dark transition hover:border-primary/40 hover:bg-[#d8eeee]" type="button" onClick={() => { setEmail("admin@docli.local"); setPassword("DocliDemo2026!"); setError(""); }}>
+      {demoLoginEnabled && <button className="mb-2 min-h-11 rounded-xl border border-primary/20 bg-primary-soft px-3 text-sm font-extrabold text-primary-dark transition hover:border-primary/40 hover:bg-[#d8eeee]" type="button" onClick={() => { setEmail(demoEmail); setPassword(demoPassword); setError(""); }}>
         Completar cuenta de prueba
-      </button>
+      </button>}
       <label className={labelClass} htmlFor="correo">Correo</label><input className={fieldClass} type="email" id="correo" name="correo" autoComplete="email" placeholder="Digite su correo" required value={email} onChange={(event) => { setEmail(event.target.value); setError(""); }} />
       <label className={labelClass} htmlFor="contrasena">Contraseña</label>
       <div className="relative">
