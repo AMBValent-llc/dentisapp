@@ -13,6 +13,11 @@ const links = [
   { href: "/contacto", label: "Contacto" },
 ];
 
+const legalLinks = [
+  { href: "/privacidad", label: "Privacidad" },
+  { href: "/terminos", label: "Términos" },
+];
+
 export function PublicShell({ children, landing = false }: { children: React.ReactNode; landing?: boolean }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -73,12 +78,23 @@ export function PublicShell({ children, landing = false }: { children: React.Rea
       </header>
       <div className={cn("h-16 shrink-0", landing && "bg-linear-to-r from-[#075e68] via-[#08717d] to-primary")} aria-hidden="true" />
       {children}
-      <footer className={cn("mt-auto text-center text-sm", landing ? "grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t border-line bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-6 max-[880px]:grid-cols-[1fr_auto] max-[480px]:grid-cols-1 max-[480px]:gap-3" : "bg-[#112b33] p-5 text-[#cbd8db]")}>
-        {landing ? <>
-          <Link className="inline-flex min-h-11 items-center text-left text-xl font-black tracking-[-.04em] text-primary no-underline max-[480px]:justify-center" href="/">Docli</Link>
-          <p className="text-xs text-muted max-[880px]:hidden">Procesos claros. Equipos coordinados.</p>
-          <div className="flex flex-col items-end gap-1.5 text-xs leading-none text-muted max-[480px]:items-center"><span>© 2026 Docli</span><AmbValentCredit /></div>
-        </> : <div className="grid justify-items-center gap-2"><span>© 2026 Docli. Todos los derechos reservados.</span><AmbValentCredit dark /></div>}
+      <footer className="mt-auto border-t border-line bg-white px-[max(1.25rem,calc((100vw-1180px)/2))] py-5 text-sm">
+        <div className="mx-auto flex max-w-295 flex-wrap items-center justify-between gap-x-10 gap-y-3 max-[480px]:justify-center">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 max-[480px]:justify-center">
+            <Link className="inline-flex min-h-11 items-center text-xl font-black tracking-[-.04em] text-primary no-underline" href="/" aria-label="Docli, inicio">Docli</Link>
+            <nav className="flex items-center gap-1" aria-label="Información legal">
+              {legalLinks.map((link) => (
+                <Link className="rounded-lg px-2.5 py-2 font-semibold text-muted no-underline transition-colors hover:bg-primary-soft hover:text-primary-dark motion-reduce:transition-none" href={link.href} key={link.href}>
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+          <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-1 text-xs text-muted max-[480px]:justify-center">
+            <span>© 2026 Docli</span>
+            <AmbValentCredit />
+          </div>
+        </div>
       </footer>
     </div>
   );

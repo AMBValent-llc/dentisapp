@@ -124,10 +124,13 @@ export default function ContactPage() {
                   ¿Qué necesitas resolver?
                   <textarea className={`${fieldClass} min-h-32 resize-y`} name="mensaje" placeholder="Describe el proceso actual, las personas involucradas y el resultado que buscas…" required />
                 </label>
-                <label className="col-span-full flex items-start gap-3 text-sm text-muted">
-                  <input className="mt-1 size-4 accent-primary" name="privacidad" type="checkbox" required />
-                  <span>Acepto que Docli use esta información exclusivamente para responder mi solicitud.</span>
-                </label>
+                <div className="col-span-full flex items-start gap-3 text-sm text-muted">
+                  <input aria-describedby="contact-privacy-details" className="mt-1 size-4 accent-primary" id="contact-privacy" name="privacidad" type="checkbox" required />
+                  <div>
+                    <label className="font-medium text-white" htmlFor="contact-privacy">Acepto que Docli trate esta información para atender mi solicitud.</label>{" "}
+                    <span id="contact-privacy-details">Consulta la <Link aria-label="Política de privacidad, abre en una pestaña nueva" className="font-semibold text-white underline decoration-white/50 underline-offset-2" href="/privacidad" rel="noopener noreferrer" target="_blank">Política de privacidad</Link>.</span>
+                  </div>
+                </div>
                 <button className={`${buttonClass} col-span-full justify-self-end max-sm:w-full`} type="submit">Enviar consulta →</button>
               </FeedbackForm>
             </div>
